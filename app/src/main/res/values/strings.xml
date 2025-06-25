@@ -1,0 +1,43 @@
+<resources>
+    <string name="app_name">Hydron</string>
+    <string name="val_email_empty">El campo no puede estar vacio.</string>
+    <string name="val_email_invalid">No es un email valido.</string>
+    <string name="val_password_empty">El campo no puede estar vacio.</string>
+    <string name="val_password_invalid">La contraseña debe tener al menos 8 caracteres, una mayuscula, una minuscula, un numero y un caracter especial.</string>
+    <string name="val_password_match">Las contraseñas no coinciden.</string>
+    <string name="val_text_empty">El campo no puede estar vacio.</string>
+    <string name="val_text_invalid">Solo se permiten letras y numeros.</string>
+
+
+    <!--Register strings-->
+    <string name="val_email_label">Correo Electronico</string>
+    <string name="val_password_label">Contraseña</string>
+    <string name="val_repeated_password_label">Repetir Contraseña</string>
+
+    <string name="val_name_label">Nombre Completo</string>
+    <string name="val_sex_label">Sexo</string>
+    <string name="val_birth_date_label">Fecha de Nacimiento</string>
+    <string name="val_height_label">Altura (m)</string>
+    <string name="val_weight_label">Peso (Kg)</string>
+    <string name="val_moreabout_label">Mas sobre ti</string>
+
+    <string name="val_name_empty">El campo no puede estar vacio.</string>
+    <string name="val_name_invalid">Solo se permiten letras y numeros.</string>
+    <string name="val_sex_empty">El campo no puede estar vacio.</string>
+    <string name="val_sex_invalid">Solo se permiten letras y numeros.</string>
+    <string name="val_birth_date_empty">El campo no puede estar vacio.</string>
+    <string name="val_birth_date_invalid">Formato de fecha incorrecto.</string>
+    <string name="val_height_empty">El campo no puede estar vacio.</string>
+    <string name="val_height_invalid">Solo se permiten numeros.</string>
+    <string name="val_weight_empty">El campo no puede estar vacio.</string>
+    <string name="val_weight_invalid">Solo se permiten numeros.</string>
+
+    <string name="val_hypertension_title">Hipertension arterial</string>
+    <string name="val_hypertension_description"> Si el paciente sufre de hipertension arterial. </string>
+    <string name="val_diabetes_title">Diabetes</string>
+    <string name="val_diabetes_description"> Si el paciente sufre de diabetes. </string>
+    <string name="val_heart_disease_title">Enfermedad Cardíaca</string>
+    <string name="val_heart_disease_description"> Si el paciente sufre de enfermedad cardiaca. </string>
+
+
+</resources>
