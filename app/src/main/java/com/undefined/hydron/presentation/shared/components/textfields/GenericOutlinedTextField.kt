@@ -12,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -63,27 +64,25 @@ fun GenericDoubleField(
     value: String,
     onValueChange: (String) -> Unit,
     @StringRes labelRes: Int,
+    intValue: Int,
+    decValue: Int,
     errorMessage: String? = null
 ) {
-    Column(
-        modifier = modifier.fillMaxWidth(),
-    ) {
+    Column(modifier = modifier.fillMaxWidth()) {
         OutlinedTextField(
             value = value,
-            onValueChange = {
-                if (it.isEmpty() || it.matches(Regex("^\\d*\\.?\\d*$"))) {
-                    onValueChange(it)
-                }
+            onValueChange = { input ->
+                val formatted = getValidatedNumber(input, intValue, decValue)
+                onValueChange(formatted)
             },
-            label = { Text(text = stringResource(id = labelRes)) },
-            keyboardOptions = KeyboardOptions.Default.copy(
+            label = { Text(stringResource(labelRes)) },
+            keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Number,
                 imeAction = ImeAction.Done
             ),
             singleLine = true,
             isError = errorMessage != null
         )
-
         errorMessage?.let {
             Text(
                 text = it,
@@ -92,11 +91,24 @@ fun GenericDoubleField(
                 modifier = Modifier.padding(start = 12.dp, top = 2.dp)
             )
         }
-
         Spacer(modifier = Modifier.height(6.dp))
     }
-
 }
+
+private fun getValidatedNumber(text: String, intValue: Int, decValue: Int): String {
+    val filtered = text.filterIndexed { index, c ->
+        c.isDigit() || (c == '.' && text.indexOf('.') == index)
+    }
+    return if (filtered.contains('.')) {
+        val before = filtered.substringBefore('.').take(intValue)
+        val after = filtered.substringAfter('.').take(decValue)
+        "$before.$after"
+    } else {
+        filtered.take(intValue)
+    }
+}
+
+
 
 @Composable
 fun GenericTextArea(

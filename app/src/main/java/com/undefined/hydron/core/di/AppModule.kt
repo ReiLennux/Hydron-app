@@ -10,6 +10,7 @@ import com.undefined.hydron.domain.repository.interfaces.ITodoRepository
 import com.undefined.hydron.domain.repository.TodoRepositoryImpl
 import com.undefined.hydron.domain.repository.interfaces.IAuthRepository
 import com.undefined.hydron.domain.useCases.auth.AuthUseCases
+import com.undefined.hydron.domain.useCases.auth.GetUser
 import com.undefined.hydron.domain.useCases.auth.RegisterUser
 import com.undefined.hydron.domain.useCases.dataStore.DataStoreUseCases
 import com.undefined.hydron.domain.useCases.dataStore.GetDataBoolean
@@ -79,7 +80,8 @@ object AppModule {
     @Provides
     fun provideAuthUseCases(repository: IAuthRepository): AuthUseCases =
             AuthUseCases(
-                registerUser = RegisterUser(repository)
+                registerUser = RegisterUser(repository),
+                getUser = GetUser(repository)
             )
 
 }

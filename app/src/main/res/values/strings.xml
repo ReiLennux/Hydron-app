@@ -38,6 +38,9 @@
     <string name="val_diabetes_description"> Si el paciente sufre de diabetes. </string>
     <string name="val_heart_disease_title">Enfermedad Cardíaca</string>
     <string name="val_heart_disease_description"> Si el paciente sufre de enfermedad cardiaca. </string>
+    <string name="val_no_disease_title">Ninguna de las anteriores</string>
+    <string name="val_no_disease_description"> Si no tienes ninguna de las anteriores. </string>
+
 
 
 </resources>

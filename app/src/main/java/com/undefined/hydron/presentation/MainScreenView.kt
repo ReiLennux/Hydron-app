@@ -7,6 +7,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.undefined.hydron.domain.models.Response
+import com.undefined.hydron.presentation.shared.components.GenericProgressLinearIndicator
+
 @Composable
 fun MainScreenView(
     modifier: Modifier,
@@ -26,7 +28,7 @@ fun MainScreenView(
                     viewModel.resetInitialState()
                 }
                 Response.Loading ->{
-                    println("cargando...")
+                    GenericProgressLinearIndicator()
                 }
                 else -> {}
             }

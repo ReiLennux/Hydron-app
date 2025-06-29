@@ -58,18 +58,18 @@ class RegisterViewModel @Inject constructor(
     private val _name = MutableLiveData("")
     val name: LiveData<String> = _name
 
-    private val _sex = MutableLiveData(SexType.OTHER)
+    private val _sex = MutableLiveData(SexType.Masculino)
     val sex: LiveData<SexType> = _sex
 
     private val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
     private val _birthDate = MutableLiveData(LocalDate.now().format(formatter))
     val birthDate: LiveData<String> = _birthDate
 
-    private val _height = MutableLiveData(0.0)
-    val height: LiveData<Double> = _height
+    private val _height = MutableLiveData("")
+    val height: LiveData<String> = _height
 
-    private val _weight = MutableLiveData(0.0)
-    val weight: LiveData<Double> = _weight
+    private val _weight = MutableLiveData("")
+    val weight: LiveData<String> = _weight
 
     private val _hasHypertension = MutableLiveData(false)
     val hasHypertension: LiveData<Boolean> = _hasHypertension
@@ -147,6 +147,8 @@ class RegisterViewModel @Inject constructor(
 
             is RegisterFormEvent.HeightChanged -> {
                 _height.value = event.height
+                println(_height.value)
+
             }
 
             is RegisterFormEvent.WeightChanged -> {
@@ -184,8 +186,8 @@ class RegisterViewModel @Inject constructor(
         val nameResult = _validations.validateBasicText(_name.value!!)
         val sexResult = _validations.validateSex(_sex.value!!)
         val birthDateResult = _validations.validateBirthdate(LocalDate.parse(_birthDate.value!!, formatter))
-        val heightResult = _validations.validateHeight(_height.value!!)
-        val weightResult = _validations.validateWeight(_weight.value!!)
+        val heightResult = _validations.validateHeight(_height.value?.toDouble()!!)
+        val weightResult = _validations.validateWeight(_weight.value?.toDouble()!!)
 
         val hasError = listOf(
             emailResult,
@@ -207,6 +209,7 @@ class RegisterViewModel @Inject constructor(
             _birthDateError.value = birthDateResult.errorMessage
             _heightError.value = heightResult.errorMessage
             _weightError.value = weightResult.errorMessage
+            ToastManager.showToast(isSuccess = false, message = "Faltan algunos campos por llenar...")
             return
         }
 
@@ -215,8 +218,8 @@ class RegisterViewModel @Inject constructor(
                 name = _name.value!!,
                 sex = _sex.value!!,
                 birthDate = _birthDate.value!!,
-                height = _height.value!!,
-                weight = _weight.value!!,
+                height = _height.value!!.toDouble(),
+                weight = _weight.value!!.toDouble(),
                 hasHypertension = _hasHypertension.value!!,
                 hasDiabetes = _hasDiabetes.value!!,
                 hasHeartDisease = _hasHeartDisease.value!!,
@@ -239,7 +242,7 @@ class RegisterViewModel @Inject constructor(
         val response = _authUSeCases.registerUser(user)
         if (response is Response.Success) {
             _isLoading.value = Response.Success(true)
-            setDataStoreInfo(user.user)
+            setDataStoreInfo(response.data)
         } else if (response is Response.Error) {
             _isLoading.value = Response.Error(response.exception)
             ToastManager.showToast(isSuccess = false, message = response.exception?.message!!)

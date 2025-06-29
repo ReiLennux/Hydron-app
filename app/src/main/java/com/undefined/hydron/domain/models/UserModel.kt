@@ -10,7 +10,7 @@ data class RegisterUser(
 data class UserModel(
     val uid: String? = null,
     val name: String = "",
-    val sex: SexType = SexType.OTHER,
+    val sex: SexType = SexType.Masculino,
     val birthDate: String = LocalDate.now().toString(),
     val height: Double = 0.0,
     val weight: Double = 0.0,
@@ -27,8 +27,8 @@ data class LoginModel(
 )
 
 enum class SexType {
-    MALE,
-    FEMALE,
-    OTHER
+    Masculino,
+    Femenino,
+    PrefieroNoDecirlo,
 
 }

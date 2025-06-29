@@ -13,8 +13,8 @@ sealed class RegisterFormEvent {
     data class NameChanged(val name: String): RegisterFormEvent()
     data class SexChanged(val sex: SexType): RegisterFormEvent()
     data class BirthDateChanged(val birthDate: String): RegisterFormEvent()
-    data class HeightChanged(val height: Double): RegisterFormEvent()
-    data class WeightChanged(val weight: Double): RegisterFormEvent()
+    data class HeightChanged(val height: String): RegisterFormEvent()
+    data class WeightChanged(val weight: String): RegisterFormEvent()
 
     //more about chronic diseases
     data class HasHypertensionChanged(val hasKidneyDisease: Boolean): RegisterFormEvent()

@@ -33,7 +33,10 @@ import androidx.navigation.NavController
 import com.undefined.hydron.R
 import com.undefined.hydron.presentation.shared.components.textfields.GenericTextField
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.font.FontWeight
 import com.undefined.hydron.domain.models.GenericCatalogModel
 import com.undefined.hydron.domain.models.SexType
@@ -242,31 +245,29 @@ fun PersonalInfoForm(
         Row(
             modifier = Modifier.fillMaxWidth(),
         ) {
+
             GenericDoubleField(
-                value = height.toString(),
-                onValueChange = {
-                    it.toDoubleOrNull()?.let { parsed ->
-                        viewModel.onEvent(RegisterFormEvent.HeightChanged(parsed))
-                    }
-                },
+                value = height?: "",
+                onValueChange = { viewModel.onEvent(RegisterFormEvent.HeightChanged(it)) },
                 labelRes = R.string.val_height_label,
                 errorMessage = viewModel.heightError.value,
+                intValue = 1,
+                decValue = 2,
                 modifier = Modifier.weight(0.5f)
             )
 
             Spacer(modifier = Modifier.width(16.dp))
 
             GenericDoubleField(
-                value = weight.toString(),
-                onValueChange = {
-                    it.toDoubleOrNull()?.let { parsed ->
-                        viewModel.onEvent(RegisterFormEvent.WeightChanged(parsed))
-                    }
-                },
+                value = weight?: "",
+                onValueChange = { viewModel.onEvent(RegisterFormEvent.WeightChanged(it)) },
                 labelRes = R.string.val_weight_label,
                 errorMessage = viewModel.weightError.value,
+                intValue = 3,
+                decValue = 2,
                 modifier = Modifier.weight(0.5f)
             )
+
         }
 
         ActionsSection(
@@ -289,6 +290,8 @@ fun ChronialForm(
     val hasDiabetes by viewModel.hasDiabetes.observeAsState(false)
     val hasHeartDisease by viewModel.hasHeartDisease.observeAsState(false)
     val cDDetails by viewModel.cDDetails.observeAsState("")
+    var noDisease by remember { mutableStateOf(false) }
+
 
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(text = "Tenemos que saber un poco mas sobre ti. Dinos, ¿Padeces alguna de estas enfermedades?")
@@ -301,6 +304,7 @@ fun ChronialForm(
                 viewModel.onEvent(
                     RegisterFormEvent.HasHypertensionChanged(!hasHypertension)
                 )
+                noDisease = false
             }
         )
         GenericCardWithCheck(
@@ -312,6 +316,7 @@ fun ChronialForm(
                 viewModel.onEvent(
                     RegisterFormEvent.HasDiabetesChanged(!hasDiabetes)
                 )
+                noDisease = false
             }
         )
         GenericCardWithCheck(
@@ -323,6 +328,28 @@ fun ChronialForm(
                 viewModel.onEvent(
                     RegisterFormEvent.HasHeartDiseaseChanged(!hasHeartDisease)
                 )
+                noDisease = false
+            }
+        )
+        GenericCardWithCheck(
+            title = R.string.val_no_disease_title,
+            description = R.string.val_no_disease_description,
+            icon = Icons.Filled.MonitorHeart,
+            isChecked = noDisease,
+            onSelect = {
+                viewModel.onEvent(
+                    RegisterFormEvent.HasDiabetesChanged(false)
+                )
+                viewModel.onEvent(
+                    RegisterFormEvent.HasHeartDiseaseChanged(false)
+                )
+                viewModel.onEvent(
+                    RegisterFormEvent.HasHypertensionChanged(false)
+                )
+                viewModel.onEvent(
+                    RegisterFormEvent.ChronicDiseaseDetailsChanged("")
+                )
+                noDisease = true
             }
         )
         AnimatedVisibility(

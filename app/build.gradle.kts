@@ -97,7 +97,6 @@ dependencies {
     implementation (libs.androidx.ui)
     debugImplementation (libs.androidx.ui.tooling)
 
-
 }
 
 kapt {

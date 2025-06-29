@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -51,27 +52,29 @@ fun GenericDateField(
     }
 
     Box(
-        modifier = modifier.clickable { showDatePicker = true }
+        modifier = modifier .fillMaxWidth() .clickable { showDatePicker = true }
     ) {
         Column(
-            modifier = modifier.fillMaxWidth(),
+            modifier = modifier.fillMaxWidth().clickable { showDatePicker = true },
         ) {
             OutlinedTextField(
                 value = dateValue,
                 onValueChange = {},
                 modifier = Modifier
-                    .fillMaxWidth(),
+                    .fillMaxWidth() .clickable { showDatePicker = true },
                 label = { Text(text = stringResource(id = labelRes)) },
                 readOnly = true,
                 singleLine = true,
                 isError = errorMessage != null,
                 placeholder = { Text(text = "dd/mm/aaaa") },
                 trailingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.DateRange,
-                        contentDescription = "Seleccionar fecha"
-                    )
-                }
+                    IconButton(onClick = { showDatePicker = !showDatePicker }) {
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = "Select date"
+                        )
+                    }
+                },
             )
 
             errorMessage?.let {
