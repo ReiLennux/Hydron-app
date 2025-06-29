@@ -41,6 +41,11 @@
     <string name="val_no_disease_title">Ninguna de las anteriores</string>
     <string name="val_no_disease_description"> Si no tienes ninguna de las anteriores. </string>
 
+    <string name="register_action">Registrarse</string>
+    <string name="register_description">Registrarse</string>
+    <string name="login_action">Iniciar Sesión</string>
+    <string name="login_description">Iniciar Sesión</string>
+
 
 
 </resources>

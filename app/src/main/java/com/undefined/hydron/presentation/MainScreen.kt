@@ -41,7 +41,7 @@ fun MainScreen() {
     LaunchedEffect(navigateToLogin) {
         if (navigateToLogin) {
             navController.navigate(Routes.LOGIN.name) {
-                popUpTo(Routes.HOME.name) { inclusive = true }
+                popUpTo(Routes.LOGIN.name) { inclusive = true }
             }
         }
     }

@@ -2,10 +2,12 @@ package com.undefined.hydron.domain.repository
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
+import com.undefined.hydron.domain.models.LoginModel
 import com.undefined.hydron.domain.models.RegisterUser
 import com.undefined.hydron.domain.models.Response
 import com.undefined.hydron.domain.models.UserModel
 import com.undefined.hydron.domain.repository.interfaces.IAuthRepository
+import com.undefined.hydron.domain.useCases.auth.LoginUser
 import kotlinx.coroutines.tasks.await
 
 class AuthRepositoryImpl : IAuthRepository {
@@ -48,5 +50,18 @@ class AuthRepositoryImpl : IAuthRepository {
             Response.Error(e)
         }
     }
+
+
+    override suspend fun loginUser(loginModel: LoginModel): Response<UserModel> {
+        return try {
+            val result = auth.signInWithEmailAndPassword(loginModel.email, loginModel.password).await()
+            val uid = result.user?.uid ?: return Response.Error(Exception("User ID is null"))
+            getUser(uid)
+        } catch (e: Exception) {
+            Response.Error(e)
+        }
+    }
+
+
 
 }

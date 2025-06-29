@@ -44,6 +44,7 @@ import com.undefined.hydron.presentation.shared.components.GenericCardWithCheck
 import com.undefined.hydron.presentation.shared.components.GenericDropDownMenu
 import com.undefined.hydron.presentation.shared.components.textfields.GenericDateField
 import com.undefined.hydron.presentation.shared.components.textfields.GenericDoubleField
+import com.undefined.hydron.presentation.shared.components.textfields.GenericPasswordTextField
 import com.undefined.hydron.presentation.shared.components.textfields.GenericTextArea
 import com.undefined.hydron.presentation.shared.navigation.enums.Routes
 import kotlinx.coroutines.launch
@@ -163,7 +164,7 @@ fun AuthForm(
             labelRes = R.string.val_email_label,
             errorMessage = viewModel.emailError.value,
         )
-        GenericTextField(
+        GenericPasswordTextField(
             value = password,
             onValueChange = {
                 viewModel.onEvent(
@@ -173,7 +174,7 @@ fun AuthForm(
             labelRes = R.string.val_password_label,
             errorMessage = viewModel.passwordError.value,
         )
-        GenericTextField(
+        GenericPasswordTextField(
             value = repeatedPassword,
             onValueChange = {
                 viewModel.onEvent(
@@ -395,7 +396,7 @@ fun ActionsSection(
     next: (() -> Unit)? = null
 ) {
 
-    val prevAction = prev ?: { navController.navigate(Routes.DASHBOARD.name) }
+    val prevAction = prev ?: { navController.navigate(Routes.LOGIN.name) }
     val nextAction = next ?: { viewModel.onEvent(RegisterFormEvent.Submit) }
     val prevTitle = if (prev == null) "Ya tengo cuenta!" else "Anterior"
     val nextTitle = if (next == null) "Registrarse" else "Siguiente"
