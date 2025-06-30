@@ -97,7 +97,7 @@ fun RegisterSection(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .animateContentSize() // <= aquí también funciona
+                .animateContentSize()
         ) {
             when (page) {
                 0 -> AuthForm(

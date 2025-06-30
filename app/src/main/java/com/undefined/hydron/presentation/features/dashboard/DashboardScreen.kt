@@ -13,7 +13,6 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.undefined.hydron.presentation.shared.navigation.enums.Routes
 
 @Composable
 fun DashboardScreen(
@@ -32,7 +31,6 @@ fun DashboardScreen(
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             DashboardContent(viewModel, navController)
             if (showDrawer.value) {
-                AddTaskModal(viewModel)
             }
         }
     }

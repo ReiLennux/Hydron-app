@@ -1,7 +1,6 @@
 package com.undefined.hydron.presentation.features.auth.login
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -31,11 +30,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.undefined.hydron.R
-import com.undefined.hydron.presentation.features.auth.register.ActionsSection
-import com.undefined.hydron.presentation.features.auth.register.RegisterFormEvent
-import com.undefined.hydron.presentation.features.auth.register.RegisterSection
-import com.undefined.hydron.presentation.features.auth.register.RegisterTitle
-import com.undefined.hydron.presentation.features.auth.register.RegisterViewModel
 import com.undefined.hydron.presentation.shared.components.textfields.GenericPasswordTextField
 import com.undefined.hydron.presentation.shared.components.textfields.GenericTextField
 import com.undefined.hydron.presentation.shared.navigation.enums.Routes
@@ -115,7 +109,7 @@ fun ActionsSection(
     modifier: Modifier = Modifier,
     viewModel: LoginViewModel,
     navController: NavController,
-    enabled: Boolean = true // Nuevo parámetro para controlar el estado de los botones
+    enabled: Boolean = true 
 ) {
     Row(
         modifier = modifier
@@ -134,7 +128,7 @@ fun ActionsSection(
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = stringResource(R.string.register_description) // Usar recursos de strings
+                contentDescription = stringResource(R.string.register_description)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
@@ -144,7 +138,6 @@ fun ActionsSection(
             )
         }
 
-        // Botón de Inicio de Sesión
         Button(
             onClick = { viewModel.onEvent(LoginFormEvent.Submit) },
             modifier = Modifier.weight(1f),

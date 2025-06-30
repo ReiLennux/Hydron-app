@@ -1,6 +1,7 @@
 [versions]
 # Versiones principales
 agp = "8.9.1"
+composeCharts = "0.1.7"
 datastorePreferencesVersion = "1.0.0"
 firebaseBom = "33.15.0"
 hiltNavigationComposeVersion = "1.1.0"
@@ -21,6 +22,7 @@ hiltNavigationCompose = "1.2.0"
 # Room
 materialIconsExtended = "1.7.8"
 navigationComposeVersion = "2.7.7"
+playServicesWearable = "19.0.0"
 room = "2.7.2"
 
 # Compose
@@ -64,6 +66,7 @@ androidx-ui = { module = "androidx.compose.ui:ui", version.ref = "ui" }
 androidx-ui-text-google-fonts = { module = "androidx.compose.ui:ui-text-google-fonts", version.ref = "uiTextGoogleFonts" }
 androidx-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
+compose-charts = { module = "io.github.ehsannarmani:compose-charts", version.ref = "composeCharts" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-auth = { module = "com.google.firebase:firebase-auth" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
@@ -96,6 +99,7 @@ androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", vers
 
 # Metadata
 kotlinx-metadata-jvm = { module = "org.jetbrains.kotlinx:kotlinx-metadata-jvm", version.ref = "kotlinxMetadataJvm" }
+play-services-wearable = { module = "com.google.android.gms:play-services-wearable", version.ref = "playServicesWearable" }
 tastytoast = { module = "com.sdsmdg.tastytoast:tastytoast", version.ref = "tastytoast" }
 
 [plugins]

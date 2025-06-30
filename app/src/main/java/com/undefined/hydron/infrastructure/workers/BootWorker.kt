@@ -1,11 +1,7 @@
 package com.undefined.hydron.infrastructure.workers
 
-import android.annotation.SuppressLint
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
+
 import android.content.Context
-import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -13,7 +9,6 @@ import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import com.undefined.hydron.R
-import com.undefined.hydron.infrastructure.services.ApiForegroundService
 import kotlinx.coroutines.delay
 
 class BootWorker(appContext: Context, workerParams: WorkerParameters) :
@@ -34,7 +29,6 @@ class BootWorker(appContext: Context, workerParams: WorkerParameters) :
         )
         setForegroundAsync(foregroundInfo)
 
-        // Simula la lógica del servicio
         repeat(5) {
             Log.d("BootWorker", "Enviando datos desde Worker...")
             delay(10_000L)

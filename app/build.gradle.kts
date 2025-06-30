@@ -97,6 +97,13 @@ dependencies {
     implementation (libs.androidx.ui)
     debugImplementation (libs.androidx.ui.tooling)
 
+    //Weareable
+    implementation (libs.play.services.wearable)
+
+    implementation (libs.compose.charts)
+
+
+
 }
 
 kapt {

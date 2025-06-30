@@ -5,7 +5,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.undefined.hydron.domain.models.entities.Task
-import com.undefined.hydron.domain.useCases.room.tasks.RoomUseCases
+import com.undefined.hydron.domain.models.entities.sensors.HeartRate
+import com.undefined.hydron.domain.useCases.room.heartRate.HeartrateRoomUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -13,7 +14,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
-    private val roomUseCases: RoomUseCases
+    private val roomUseCases: HeartrateRoomUseCases
 ): ViewModel(){
 
     private val _showAddTaskDrawe = MutableLiveData(false)
@@ -25,8 +26,8 @@ class DashboardViewModel @Inject constructor(
     private val _taskDescription = MutableLiveData("")
     val taskDescription: LiveData<String> = _taskDescription
 
-    private val _tasks = MutableLiveData<List<Task>>()
-    val tasks: LiveData<List<Task>> = _tasks
+    private val _registers = MutableLiveData<List<HeartRate>>()
+    val registers: LiveData<List<HeartRate>> = _registers
 
 
     init {
@@ -47,8 +48,9 @@ class DashboardViewModel @Inject constructor(
 
     fun getTasks(){
         viewModelScope.launch {
-            roomUseCases.getTasks().collect {
-                _tasks.value = it
+            roomUseCases.getHeartRates().collect {
+                println(it)
+                _registers.value = it
             }
         }
     }
@@ -60,7 +62,7 @@ class DashboardViewModel @Inject constructor(
             isCompleted = false
         )
         viewModelScope.launch {
-            roomUseCases.addTask(newTask)
+            //roomUseCases.addHeartRate(newTask)
         }
         getTasks()
 
@@ -68,7 +70,7 @@ class DashboardViewModel @Inject constructor(
 
     fun deleteTask(task: Task){
         viewModelScope.launch {
-            roomUseCases.deleteTask(task)
+            //roomUseCases.deleteTask(task)
         }
         getTasks()
 
@@ -76,7 +78,7 @@ class DashboardViewModel @Inject constructor(
 
     fun updateTask(task: Task){
         viewModelScope.launch {
-            roomUseCases.updateTask(task)
+            //roomUseCases.updateTask(task)
         }
         getTasks()
     }
