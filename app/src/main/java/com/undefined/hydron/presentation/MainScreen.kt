@@ -46,7 +46,7 @@ fun MainScreen() {
         }
     }
 
-    MainScreenView(modifier = Modifier)
+    //MainScreenView(modifier = Modifier)
     Scaffold(
         topBar = {
             TopAppBar(visible = viewModel.verifyRouteTop(currentRoute = currentRoute))
