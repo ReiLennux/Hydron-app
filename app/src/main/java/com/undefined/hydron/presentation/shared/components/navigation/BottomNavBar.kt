@@ -22,7 +22,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.undefined.hydron.presentation.shared.navigation.navigationItems
 
 @Composable
-fun BottomNavBar(navController: NavHostController, visible : Boolean) {
+fun BottomNavBar(navController: NavHostController, visible : Boolean = false) {
     AnimatedVisibility(
         visible = visible,
         enter = slideInVertically() + expandVertically() + fadeIn(),

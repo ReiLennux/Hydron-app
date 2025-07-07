@@ -2,16 +2,16 @@ package com.undefined.hydron.core.di
 
 import android.content.Context
 import androidx.room.Room
-import com.undefined.hydron.domain.interfaces.dao.IHeartRateDao
+import com.undefined.hydron.domain.interfaces.dao.ISensorDataDao
 import com.undefined.hydron.domain.interfaces.dao.ITaskDao
 import com.undefined.hydron.domain.interfaces.dao.IWearMessageDao
 import com.undefined.hydron.domain.repository.AuthRepositoryImpl
 import com.undefined.hydron.domain.repository.DataStoreRepositoryImpl
-import com.undefined.hydron.domain.repository.HeartRateRepositoryImpl
+import com.undefined.hydron.domain.repository.SensorDataRepositoryImpl
 import com.undefined.hydron.domain.repository.interfaces.ITodoRepository
 import com.undefined.hydron.domain.repository.TodoRepositoryImpl
 import com.undefined.hydron.domain.repository.interfaces.IAuthRepository
-import com.undefined.hydron.domain.repository.interfaces.IHeartRateRepository
+import com.undefined.hydron.domain.repository.interfaces.ISensorDataRepository
 import com.undefined.hydron.domain.useCases.auth.AuthUseCases
 import com.undefined.hydron.domain.useCases.auth.GetUser
 import com.undefined.hydron.domain.useCases.auth.LoginUser
@@ -25,10 +25,10 @@ import com.undefined.hydron.domain.useCases.dataStore.SetDataBoolean
 import com.undefined.hydron.domain.useCases.dataStore.SetDataInt
 import com.undefined.hydron.domain.useCases.dataStore.SetDataString
 import com.undefined.hydron.domain.useCases.dataStore.SetDouble
-import com.undefined.hydron.domain.useCases.room.heartRate.AddHeartRate
-import com.undefined.hydron.domain.useCases.room.heartRate.DeleteHeartRate
-import com.undefined.hydron.domain.useCases.room.heartRate.GetHeartRates
-import com.undefined.hydron.domain.useCases.room.heartRate.HeartrateRoomUseCases
+import com.undefined.hydron.domain.useCases.room.sensors.AddSensorData
+import com.undefined.hydron.domain.useCases.room.sensors.DeleteSensorData
+import com.undefined.hydron.domain.useCases.room.sensors.GetSensorDataByType
+import com.undefined.hydron.domain.useCases.room.sensors.SensorDataUseCases
 import com.undefined.hydron.domain.useCases.room.tasks.AddTask
 import com.undefined.hydron.domain.useCases.room.tasks.DeleteTask
 import com.undefined.hydron.domain.useCases.room.tasks.GetTasks
@@ -85,19 +85,19 @@ object AppModule {
     }
 
     @Provides
-    fun provideHeartRateDao(db: MainDatabase): IHeartRateDao = db.heartRateDao()
+    fun provideHeartRateDao(db: MainDatabase): ISensorDataDao = db.sensorDataDao()
 
     @Provides
-    fun provideHeartRateRepository(dao: IHeartRateDao): IHeartRateRepository = HeartRateRepositoryImpl(dao)
+    fun provideHeartRateRepository(dao: ISensorDataDao): ISensorDataRepository =
+        SensorDataRepositoryImpl(dao)
 
     @Provides
-    fun provideHeartRateUseCases(repository: IHeartRateRepository): HeartrateRoomUseCases {
-        return HeartrateRoomUseCases(
-            addHeartRate = AddHeartRate(repository),
-            deleteHeartRate = DeleteHeartRate(repository),
-            getHeartRates = GetHeartRates(repository)
+    fun provideHeartRateUseCases(repository: ISensorDataRepository): SensorDataUseCases {
+        return SensorDataUseCases(
+            addSensorData = AddSensorData(repository),
+            deleteSensorData = DeleteSensorData(repository),
+            getSensorDataByType = GetSensorDataByType(repository)
         )
-
     }
 
     @Singleton
@@ -113,7 +113,7 @@ object AppModule {
             )
 
     @Provides
-    fun provideWearMessageDao(room: HeartrateRoomUseCases): IWearMessageDao {
+    fun provideWearMessageDao(room: SensorDataUseCases): IWearMessageDao {
         return WearMessageDaoImpl(room)
     }
 

@@ -45,6 +45,15 @@
             </intent-filter>
         </receiver>
 
+        <service
+            android:name=".infrastructure.services.WearDataListenerService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data android:scheme="wear" android:host="*" android:path="/sensor_data"/>
+            </intent-filter>
+        </service>
+
 
 
 
@@ -55,6 +64,9 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="http" />
             </intent-filter>
         </activity>
 

@@ -1,6 +1,8 @@
 package com.undefined.hydron.presentation
 
 import android.content.Intent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -15,7 +17,8 @@ import androidx.navigation.compose.rememberNavController
 import com.undefined.hydron.presentation.shared.components.navigation.BottomNavBar
 import com.undefined.hydron.presentation.shared.components.navigation.TopAppBar
 import com.undefined.hydron.presentation.shared.navigation.enums.Routes
-import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import com.undefined.hydron.infrastructure.services.ApiForegroundService
@@ -28,7 +31,9 @@ fun MainScreen() {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-    val currentUser by viewModel.currentUser.observeAsState(initial = null)
+    //val currentUser by viewModel.currentUser.observeAsState(initial = null)
+    val isVisible = remember { mutableStateOf(true) }
+
 
     val context = LocalContext.current
     LaunchedEffect(Unit) {
@@ -59,13 +64,20 @@ fun MainScreen() {
         }
     ) { paddingValues ->
 
-        NavHost(
-            modifier = Modifier.padding(paddingValues),
-            navController = navController,
-            startDestination = Routes.HOME.name
+        AnimatedVisibility(
+            visible = isVisible.value,
+            modifier = Modifier
+                .fillMaxSize()
         ) {
+            NavHost(
+                modifier = Modifier.padding(paddingValues),
+                navController = navController,
+                startDestination = Routes.HOME.name
+            ) {
 
-            mainRoutes(navController = navController)
+                mainRoutes(navController = navController)
+            }
         }
+
     }
 }

@@ -47,5 +47,28 @@
     <string name="login_description">Iniciar Sesión</string>
 
 
+    <!--Profile strings-->
+    <string name="profile_title">Datos Personales</string>
+    <string name="val_email_title">Correo Electronico</string>
+    <string name="val_name_title">Nombre Completo</string>
+    <string name="val_sex_title">Sexo</string>
+    <string name="val_birth_date_title">Fecha de Nacimiento</string>
+    <string name="val_height_title">Altura (m)</string>
+    <string name="val_weight_title">Peso (Kg)</string>
+    <string name="medical_conditions_title">Condiciones médicas</string>>
+    <string name="val_chronic_disease_title">Enfermedades Crónicas</string>
+    <string name="val_has_hypertension_title">Padece Hipertension arterial</string>
+    <string name="val_has_diabetes_title">Padece Diabetes</string>
+    <string name="val_has_heart_disease_title">Padece Enfermedad Cardíaca</string>
+    <string name="val_chronic_disease_details_title">Detalles adicionales</string>
+
+    <!--Dashboard strings-->
+    <string name="bpm_title">Frecuencia Cardíaca</string>
+    <string name="normal_range">Rango normal: 60–100 BPM</string>
+    <string name="bpm_warning_high">¡Alta frecuencia!</string>">
+    <string name="bpm_warning_low">¡Baja frecuencia!</string>
+    <string name="dashboard_no_data">Sin datos para mostrar</string>
+
+
 
 </resources>

@@ -4,9 +4,9 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.undefined.hydron.domain.models.entities.Task
-import com.undefined.hydron.domain.models.entities.sensors.HeartRate
-import com.undefined.hydron.domain.useCases.room.heartRate.HeartrateRoomUseCases
+import com.undefined.hydron.domain.models.entities.SensorData
+import com.undefined.hydron.domain.models.entities.SensorType
+import com.undefined.hydron.domain.useCases.room.sensors.SensorDataUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -14,7 +14,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
-    private val roomUseCases: HeartrateRoomUseCases
+    private val sensorDataUseCases: SensorDataUseCases
 ): ViewModel(){
 
     private val _showAddTaskDrawe = MutableLiveData(false)
@@ -26,8 +26,8 @@ class DashboardViewModel @Inject constructor(
     private val _taskDescription = MutableLiveData("")
     val taskDescription: LiveData<String> = _taskDescription
 
-    private val _registers = MutableLiveData<List<HeartRate>>()
-    val registers: LiveData<List<HeartRate>> = _registers
+    private val _registers = MutableLiveData<List<SensorData>>()
+    val registers: LiveData<List<SensorData>> = _registers
 
 
     init {
@@ -38,51 +38,13 @@ class DashboardViewModel @Inject constructor(
         _showAddTaskDrawe.value = !_showAddTaskDrawe.value!!
     }
 
-    fun setTaskTitle(newTitle: String) {
-        _taskTitle.value = newTitle
-    }
-
-    fun setTaskDescription(newDesc: String) {
-        _taskDescription.value = newDesc
-    }
 
     fun getTasks(){
         viewModelScope.launch {
-            roomUseCases.getHeartRates().collect {
+            sensorDataUseCases.getSensorDataByType(SensorType.HEART_RATE).collect {
                 println(it)
                 _registers.value = it
             }
         }
     }
-
-    fun addTask() {
-        val newTask = Task(
-            title = _taskTitle.value ?: "",
-            description = _taskDescription.value ?: "",
-            isCompleted = false
-        )
-        viewModelScope.launch {
-            //roomUseCases.addHeartRate(newTask)
-        }
-        getTasks()
-
-    }
-
-    fun deleteTask(task: Task){
-        viewModelScope.launch {
-            //roomUseCases.deleteTask(task)
-        }
-        getTasks()
-
-    }
-
-    fun updateTask(task: Task){
-        viewModelScope.launch {
-            //roomUseCases.updateTask(task)
-        }
-        getTasks()
-    }
-
-
-
 }

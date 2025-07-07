@@ -109,8 +109,8 @@ class RegisterViewModel @Inject constructor(
     private val _weightError = MutableLiveData<String?>()
     val weightError: LiveData<String?> = _weightError
 
-    private val _cDDetailsError = MutableLiveData<String?>()
-    val cDDetailsError: LiveData<String?> = _cDDetailsError
+    //private val _cDDetailsError = MutableLiveData<String?>()
+    //val cDDetailsError: LiveData<String?> = _cDDetailsError
 
     //endregion
 
@@ -213,7 +213,7 @@ class RegisterViewModel @Inject constructor(
             return
         }
 
-        var user = RegisterUser(
+        val user = RegisterUser(
             user = UserModel(
                 name = _name.value!!,
                 sex = _sex.value!!,
@@ -242,17 +242,20 @@ class RegisterViewModel @Inject constructor(
         val response = _authUSeCases.registerUser(user)
         if (response is Response.Success) {
             _isLoading.value = Response.Success(true)
-            setDataStoreInfo(response.data)
+            setDataStoreInfo(
+                response.data,
+                user.login.email
+            )
         } else if (response is Response.Error) {
             _isLoading.value = Response.Error(response.exception)
             ToastManager.showToast(isSuccess = false, message = response.exception?.message!!)
         }
     }.await()
 
-    private fun setDataStoreInfo(user: UserModel) = viewModelScope.launch {
+    private fun setDataStoreInfo(user: UserModel, email: String) = viewModelScope.launch {
         _dataStoreUseCases.setDataString.invoke(USER_UID, user.uid!!)
         _dataStoreUseCases.setDataString.invoke(USER_NAME, user.name)
-        _dataStoreUseCases.setDataString.invoke(USER_EMAIL, user.name)
+        _dataStoreUseCases.setDataString.invoke(USER_EMAIL, email)
         _dataStoreUseCases.setDataString.invoke(USER_SEX, user.sex.toString())
         _dataStoreUseCases.setDataString.invoke(USER_BIRTHDATE, user.birthDate)
         _dataStoreUseCases.setDouble.invoke(USER_HEIGHT, user.height)

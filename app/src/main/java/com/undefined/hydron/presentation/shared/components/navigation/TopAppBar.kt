@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.undefined.hydron.presentation.shared.components.AppLogo
 
 @Composable
-fun TopAppBar(visible : Boolean = true) {
+fun TopAppBar(visible : Boolean = false) {
     AnimatedVisibility(
         visible = visible,
         enter = slideInVertically() + expandVertically() + fadeIn(),

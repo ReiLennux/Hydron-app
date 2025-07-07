@@ -5,7 +5,6 @@ plugins {
     id("kotlin-kapt")
     id("dagger.hilt.android.plugin")
     id("com.google.devtools.ksp")
-    //id("com.android.application")
     id("com.google.gms.google-services")
 
 }
@@ -30,6 +29,10 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            buildConfigField( "String", "WEATHER_API_BASE_URL", "\"https://weather.com/\"")
+            manifestPlaceholders["api_base_url"] = "https://weather.com/"
+
+
         }
     }
 
@@ -47,6 +50,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
 }
@@ -100,7 +104,15 @@ dependencies {
     //Weareable
     implementation (libs.play.services.wearable)
 
+    //Cart Compose
     implementation (libs.compose.charts)
+
+    implementation (libs.retrofit)
+    implementation (libs.converter.gson)
+
+    //Wear
+    implementation(libs.play.services.wearable.v1810)
+
 
 
 

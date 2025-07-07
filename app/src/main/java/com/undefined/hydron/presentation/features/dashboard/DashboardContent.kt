@@ -12,9 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -23,10 +21,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
+import com.undefined.hydron.R
 import ir.ehsannarmani.compose_charts.LineChart
 import ir.ehsannarmani.compose_charts.models.AnimationMode
 import ir.ehsannarmani.compose_charts.models.DrawStyle
@@ -36,11 +35,9 @@ import ir.ehsannarmani.compose_charts.models.Line
 @Composable
 fun DashboardContent(
     viewModel: DashboardViewModel = hiltViewModel(),
-    navController: NavController
 ) {
     val registers by viewModel.registers.observeAsState(emptyList())
-    val bpmList = registers.map { it.bpm.toDouble() }
-    val timestamps = registers.map { it.takenAt }
+    val bpmList = registers.map { it.value.toDouble() }
 
     val primaryColor = MaterialTheme.colorScheme.primary
     val onBackground = MaterialTheme.colorScheme.onBackground
@@ -58,7 +55,7 @@ fun DashboardContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Frecuencia Cardíaca",
+                    text = stringResource(R.string.bpm_title),
                     style = MaterialTheme.typography.titleMedium,
                     color = onBackground
                 )
@@ -109,14 +106,14 @@ fun DashboardContent(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Rango normal: 60-100 BPM",
+                    text = stringResource(R.string.normal_range),
                     style = MaterialTheme.typography.labelSmall,
                     color = onBackground.copy(alpha = 0.7f)
                 )
 
                 if (bpmList.last() > 130 || bpmList.last() < 60) {
                     Text(
-                        text = if (bpmList.last() > 130) "¡Alta frecuencia!" else "¡Baja frecuencia!",
+                        text = if (bpmList.last() > 130) stringResource(R.string.bpm_warning_high) else stringResource(R.string.bpm_warning_low),
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = MaterialTheme.colorScheme.error
                         )
@@ -132,47 +129,10 @@ fun DashboardContent(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "Sin datos para mostrar",
+                text = stringResource(R.string.dashboard_no_data),
                 style = MaterialTheme.typography.bodyMedium,
                 color = onBackground.copy(alpha = 0.6f)
             )
-        }
-    }
-}
-
-
-
-@Composable
-fun InfoDrawer(viewModel: DashboardViewModel) {
-    val title by viewModel.taskTitle.observeAsState("")
-    val description by viewModel.taskDescription.observeAsState("")
-
-    ModalBottomSheet(onDismissRequest = { viewModel.toggleAddTaskDrawe() }) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-
-            Text("Información de sistema", style = MaterialTheme.typography.headlineSmall)
-            Spacer(Modifier.height(16.dp))
-
-            Text("Título actual:", style = MaterialTheme.typography.labelMedium)
-            Text(title.ifEmpty { "N/A" }, fontWeight = FontWeight.Bold)
-
-            Spacer(Modifier.height(12.dp))
-
-            Text("Descripción:", style = MaterialTheme.typography.labelMedium)
-            Text(description.ifEmpty { "Sin descripción" }, fontWeight = FontWeight.Bold)
-
-            Spacer(Modifier.height(24.dp))
-
-            Button(
-                onClick = { viewModel.toggleAddTaskDrawe() },
-                modifier = Modifier.align(Alignment.End)
-            ) {
-                Text("Cerrar")
-            }
         }
     }
 }
