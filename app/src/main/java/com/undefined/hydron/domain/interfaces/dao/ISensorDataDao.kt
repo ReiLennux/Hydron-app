@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 interface ISensorDataDao {
 
 
-    @Query("SELECT * FROM sensor_data WHERE sensorType = :type ORDER BY takenAt DESC")
+    @Query("SELECT * FROM sensor_data WHERE sensorType = :type AND value != 0 ORDER BY takenAt DESC")
     fun  getSensorDataByTypeFlow(type: String): Flow<List<SensorData>>
 
     @Insert

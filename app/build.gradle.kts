@@ -20,6 +20,13 @@ android {
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Configuración para WeatherAPI
+        buildConfigField("String", "WEATHER_API_KEY", "\"a0fa49908c354275909164054250707\"")
+        buildConfigField("String", "WEATHER_API_BASE_URL", "\"https://api.weatherapi.com/v1/\"")
+
+        // Para diferentes entornos
+        manifestPlaceholders["api_base_url"] = "https://api.weatherapi.com/v1/"
     }
 
     buildTypes {
@@ -29,10 +36,12 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            buildConfigField( "String", "WEATHER_API_BASE_URL", "\"https://weather.com/\"")
-            manifestPlaceholders["api_base_url"] = "https://weather.com/"
+            // Puedes sobrescribir estos valores para producción si es necesario
+            buildConfigField("String", "WEATHER_API_BASE_URL", "\"https://api.weatherapi.com/v1/\"")
+        }
 
-
+        debug {
+            buildConfigField("String", "WEATHER_API_BASE_URL", "\"https://api.weatherapi.com/v1/\"")
         }
     }
 
@@ -44,7 +53,8 @@ android {
     kotlinOptions {
         jvmTarget = "11"
         freeCompilerArgs += listOf(
-            "-Xopt-in=androidx.compose.material3.ExperimentalMaterial3Api"
+            "-Xopt-in=androidx.compose.material3.ExperimentalMaterial3Api",
+            "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
         )
     }
 
@@ -52,9 +62,7 @@ android {
         compose = true
         buildConfig = true
     }
-
 }
-
 dependencies {
     // Core
     implementation(libs.androidx.core.ktx)
@@ -114,7 +122,11 @@ dependencies {
     implementation(libs.play.services.wearable.v1810)
 
 
+    implementation(libs.retrofit.v290)
+    implementation(libs.converter.gson.v290)
 
+    implementation("com.squareup.okhttp3:okhttp:4.11.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
 
 }
 

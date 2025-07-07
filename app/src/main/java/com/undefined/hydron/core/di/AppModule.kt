@@ -2,6 +2,7 @@ package com.undefined.hydron.core.di
 
 import android.content.Context
 import androidx.room.Room
+import com.undefined.hydron.domain.interfaces.IWeatherApi
 import com.undefined.hydron.domain.interfaces.dao.ISensorDataDao
 import com.undefined.hydron.domain.interfaces.dao.ITaskDao
 import com.undefined.hydron.domain.interfaces.dao.IWearMessageDao
@@ -10,8 +11,10 @@ import com.undefined.hydron.domain.repository.DataStoreRepositoryImpl
 import com.undefined.hydron.domain.repository.SensorDataRepositoryImpl
 import com.undefined.hydron.domain.repository.interfaces.ITodoRepository
 import com.undefined.hydron.domain.repository.TodoRepositoryImpl
+import com.undefined.hydron.domain.repository.WeatherImpl
 import com.undefined.hydron.domain.repository.interfaces.IAuthRepository
 import com.undefined.hydron.domain.repository.interfaces.ISensorDataRepository
+import com.undefined.hydron.domain.repository.interfaces.IWeather
 import com.undefined.hydron.domain.useCases.auth.AuthUseCases
 import com.undefined.hydron.domain.useCases.auth.GetUser
 import com.undefined.hydron.domain.useCases.auth.LoginUser
@@ -35,6 +38,8 @@ import com.undefined.hydron.domain.useCases.room.tasks.GetTasks
 import com.undefined.hydron.domain.useCases.room.tasks.TaskRoomUseCases
 import com.undefined.hydron.domain.useCases.room.tasks.UpdateTask
 import com.undefined.hydron.domain.useCases.wear.HandleWearMessage
+import com.undefined.hydron.domain.useCases.weather.GetCurrentWeather
+import com.undefined.hydron.domain.useCases.weather.WeatherUseCases
 import com.undefined.hydron.infrastructure.dao.WearMessageDaoImpl
 import com.undefined.hydron.infrastructure.db.MainDatabase
 import dagger.Module
@@ -121,6 +126,25 @@ object AppModule {
     @Provides
     fun provideHandleWearMessage(dao: IWearMessageDao): HandleWearMessage = HandleWearMessage(dao)
 
+    @Provides
+    fun provideWeatherRepository(api: IWeatherApi): IWeather = WeatherImpl(api)
+
+
+    @Provides
+    fun provideWeatherUseCases(
+        getCurrentWeather: GetCurrentWeather
+    ): WeatherUseCases {
+        return WeatherUseCases(getCurrentWeather)
+    }
+
+
+
+    @Provides
+    fun provideGetCurrentWeatherUseCase(
+        repository: IWeather
+    ): GetCurrentWeather {
+        return GetCurrentWeather(repository)
+    }
 
 }
 
