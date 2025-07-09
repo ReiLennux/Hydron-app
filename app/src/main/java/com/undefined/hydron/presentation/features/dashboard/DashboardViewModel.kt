@@ -36,7 +36,7 @@ class DashboardViewModel @Inject constructor(
     val weather: LiveData<WeatherModel?> = _weather
 
 
-    private val _location = MutableLiveData("Ciudad de México")
+    private val _location = MutableLiveData("Tula de allende")
     val location: LiveData<String> = _location
 
 

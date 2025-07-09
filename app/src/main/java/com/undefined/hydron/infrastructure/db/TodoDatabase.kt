@@ -7,7 +7,7 @@ import com.undefined.hydron.domain.interfaces.dao.ITaskDao
 import com.undefined.hydron.domain.models.entities.SensorData
 import com.undefined.hydron.domain.models.entities.Task
 
-@Database(entities = [Task::class, SensorData::class], version = 3, exportSchema = false)
+@Database(entities = [Task::class, SensorData::class], version = 4, exportSchema = false)
 abstract class MainDatabase : RoomDatabase() {
     abstract fun taskDao(): ITaskDao
     abstract fun sensorDataDao(): ISensorDataDao

@@ -2,6 +2,8 @@ package com.undefined.hydron.core.di
 
 import android.content.Context
 import androidx.room.Room
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 import com.undefined.hydron.domain.interfaces.IWeatherApi
 import com.undefined.hydron.domain.interfaces.dao.ISensorDataDao
 import com.undefined.hydron.domain.interfaces.dao.ITaskDao
@@ -30,7 +32,11 @@ import com.undefined.hydron.domain.useCases.dataStore.SetDataString
 import com.undefined.hydron.domain.useCases.dataStore.SetDouble
 import com.undefined.hydron.domain.useCases.room.sensors.AddSensorData
 import com.undefined.hydron.domain.useCases.room.sensors.DeleteSensorData
+import com.undefined.hydron.domain.useCases.room.sensors.GetRecordsBatch
 import com.undefined.hydron.domain.useCases.room.sensors.GetSensorDataByType
+import com.undefined.hydron.domain.useCases.room.sensors.GetTotalCount
+import com.undefined.hydron.domain.useCases.room.sensors.MarkAsUploaded
+import com.undefined.hydron.domain.useCases.room.sensors.ResetRecords
 import com.undefined.hydron.domain.useCases.room.sensors.SensorDataUseCases
 import com.undefined.hydron.domain.useCases.room.tasks.AddTask
 import com.undefined.hydron.domain.useCases.room.tasks.DeleteTask
@@ -42,6 +48,7 @@ import com.undefined.hydron.domain.useCases.weather.GetCurrentWeather
 import com.undefined.hydron.domain.useCases.weather.WeatherUseCases
 import com.undefined.hydron.infrastructure.dao.WearMessageDaoImpl
 import com.undefined.hydron.infrastructure.db.MainDatabase
+import com.undefined.hydron.infrastructure.services.DataTransferService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -101,7 +108,11 @@ object AppModule {
         return SensorDataUseCases(
             addSensorData = AddSensorData(repository),
             deleteSensorData = DeleteSensorData(repository),
-            getSensorDataByType = GetSensorDataByType(repository)
+            getSensorDataByType = GetSensorDataByType(repository),
+            getTotalCount = GetTotalCount(repository),
+            getRecordsBatch = GetRecordsBatch(repository),
+            resetRecords = ResetRecords(repository),
+            markAsUploaded = MarkAsUploaded(repository)
         )
     }
 
@@ -145,6 +156,35 @@ object AppModule {
     ): GetCurrentWeather {
         return GetCurrentWeather(repository)
     }
+
+    @Provides
+    @Singleton
+    fun provideDataTransferService(
+        sensorDataUseCases: SensorDataUseCases,
+        firebaseDatabase: FirebaseDatabase,
+        dataStoreUseCases: DataStoreUseCases,
+        authUseCases: AuthUseCases,
+        firebaseAuth: FirebaseAuth
+    ): DataTransferService {
+        val firebaseUser = firebaseAuth.currentUser
+            ?: throw IllegalStateException("FirebaseUser is not authenticated")
+
+        return DataTransferService(
+            sensorDataUseCases,
+            firebaseDatabase,
+            firebaseUser
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideFirebaseDatabase(): FirebaseDatabase {
+        return FirebaseDatabase.getInstance()
+    }
+
+
+
+
 
 }
 

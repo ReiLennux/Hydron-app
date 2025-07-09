@@ -28,12 +28,12 @@ class WearDataListenerService : WearableListenerService() {
     override fun onMessageReceived(messageEvent: MessageEvent) {
         if (messageEvent.path == "/sensor_data") {
             val payload = String(messageEvent.data, Charsets.UTF_8)
-            Log.d("WearService", "Mensaje recibido: $payload")
+            Log.d("DATA_RECIVED", "Mensaje recibido: $payload")
 
             val value = payload.toFloatOrNull()
             if (value != null) {
                 val data = SensorData(
-                    sensorType = SensorType.HEART_RATE, // Usa uno fijo si solo envías uno
+                    sensorType = SensorType.HEART_RATE, 
                     value = value,
                     takenAt = System.currentTimeMillis()
                 )

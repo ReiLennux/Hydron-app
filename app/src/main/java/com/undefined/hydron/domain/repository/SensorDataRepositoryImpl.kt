@@ -20,4 +20,14 @@ class SensorDataRepositoryImpl @Inject constructor(
 
     override suspend fun deleteSensorData(sensorData: SensorData) =
         sensorDataDao.delete(sensorData)
+
+    //dbBatch
+    override suspend fun getTotalCount(): Int = sensorDataDao.getTotalCount()
+
+    override suspend fun getRecordsBatch(offset: Int, limit: Int): List<SensorData> =
+        sensorDataDao.getRecordsBatch(offset, limit)
+
+    override suspend fun resetRecords() = sensorDataDao.resetRecords()
+
+    override suspend fun markAsUploaded(ids: List<Int>) = sensorDataDao.markAsUploaded(ids)
 }
