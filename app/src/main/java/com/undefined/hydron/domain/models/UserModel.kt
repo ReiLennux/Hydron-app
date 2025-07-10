@@ -32,3 +32,7 @@ enum class SexType {
     PrefieroNoDecirlo,
 
 }
+
+fun UserModel.hasAnyDisease(): Boolean {
+    return hasHypertension || hasDiabetes || hasHeartDisease
+}

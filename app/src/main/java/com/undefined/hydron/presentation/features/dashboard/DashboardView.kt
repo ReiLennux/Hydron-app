@@ -2,27 +2,56 @@ package com.undefined.hydron.presentation.features.dashboard
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavController
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.undefined.hydron.domain.models.Response
 import com.undefined.hydron.presentation.shared.components.GenericProgressLinearIndicator
+import com.undefined.hydron.presentation.shared.components.toast.ToastMessage
 
 
 @Composable
 fun DashboardView (
-    modifier: Modifier,
-    navController: NavController,
+    modifier: Modifier = Modifier,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
+
+    val state = viewModel.isLoading.collectAsState()
     Box(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.TopStart
     ) {
+        ToastMessage(
+            modifier = Modifier.align(Alignment.BottomCenter)
+                .padding(bottom = 16.dp)
+        )
 
+        state.let { state ->
 
-        GenericProgressLinearIndicator()
+            when(state.value){
+                is Response.Loading -> {
+                    GenericProgressLinearIndicator()
+                }
 
+                is Response.Error -> {
+                    LaunchedEffect(Unit){
+                        viewModel.resetState()
+                    }
+                }
+
+                is Response.Success -> {
+                    LaunchedEffect(Unit){
+                        viewModel.setWeather((state.value as Response.Success).data)
+                    }                }
+
+                else -> {}
+            }
+
+        }
     }
 }

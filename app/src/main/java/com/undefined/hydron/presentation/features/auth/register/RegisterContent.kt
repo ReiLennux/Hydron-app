@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -151,8 +153,15 @@ fun AuthForm(
     val email by viewModel.email.observeAsState("")
     val password by viewModel.password.observeAsState("")
     val repeatedPassword by viewModel.repeatedPassword.observeAsState("")
+    val scrollState = rememberScrollState()
 
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+
+    Column(
+        modifier = Modifier
+            .verticalScroll(scrollState),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+
+    ) {
         Text(text = "Crea una cuenta para empezar a usar la app.")
         GenericTextField(
             value = email,
@@ -210,8 +219,14 @@ fun PersonalInfoForm(
     val birthDate by viewModel.birthDate.observeAsState("")
     val height by viewModel.height.observeAsState()
     val weight by viewModel.weight.observeAsState()
+    val scrollState = rememberScrollState()
 
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+
+    Column(
+        modifier = Modifier
+            .verticalScroll(scrollState),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
         Text(text = "Ajustaremos nuestros parametros de salud con estos datos.")
         GenericTextField(
             value = name,
@@ -292,9 +307,14 @@ fun ChronialForm(
     val hasHeartDisease by viewModel.hasHeartDisease.observeAsState(false)
     val cDDetails by viewModel.cDDetails.observeAsState("")
     var noDisease by remember { mutableStateOf(false) }
+    val scrollState = rememberScrollState()
 
 
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(
+        modifier = Modifier
+            .verticalScroll(scrollState),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
         Text(text = "Tenemos que saber un poco mas sobre ti. Dinos, ¿Padeces alguna de estas enfermedades?")
         GenericCardWithCheck(
             title = R.string.val_hypertension_title,

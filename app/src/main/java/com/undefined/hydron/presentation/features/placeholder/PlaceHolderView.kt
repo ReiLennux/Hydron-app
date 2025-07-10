@@ -21,7 +21,7 @@ fun PlaceHolderView (
         contentAlignment = Alignment.TopStart
     ) {
 
-        GenericProgressLinearIndicator()
+        //GenericProgressLinearIndicator()
 
     }
 }

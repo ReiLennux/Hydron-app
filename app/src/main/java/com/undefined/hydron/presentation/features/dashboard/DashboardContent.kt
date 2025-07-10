@@ -12,9 +12,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DeviceThermostat
+import androidx.compose.material.icons.filled.WaterDrop
+import androidx.compose.material.icons.filled.WindPower
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -23,10 +29,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
+import com.undefined.hydron.R
+import com.undefined.hydron.domain.models.entities.WeatherModel
 import ir.ehsannarmani.compose_charts.LineChart
 import ir.ehsannarmani.compose_charts.models.AnimationMode
 import ir.ehsannarmani.compose_charts.models.DrawStyle
@@ -36,39 +45,69 @@ import ir.ehsannarmani.compose_charts.models.Line
 @Composable
 fun DashboardContent(
     viewModel: DashboardViewModel = hiltViewModel(),
-    navController: NavController
 ) {
     val registers by viewModel.registers.observeAsState(emptyList())
-    val bpmList = registers.map { it.bpm.toDouble() }
-    val timestamps = registers.map { it.takenAt }
+    val weather by viewModel.weather.observeAsState(null)
+    val bpmList = registers.map { it.value.toDouble() }
 
-    val primaryColor = MaterialTheme.colorScheme.primary
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .background(MaterialTheme.colorScheme.background),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        weather?.let {
+            WeatherCard(it)
+        }
+
+        if (bpmList.isNotEmpty()) {
+            BpmCard(bpmList)
+        } else {
+            NoDataMessage()
+        }
+    }
+}
+
+@Composable
+fun NoDataMessage() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = stringResource(R.string.dashboard_no_data),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
+        )
+    }
+}
+
+
+@Composable
+fun BpmCard(bpmList: List<Double>) {
+    val primary = MaterialTheme.colorScheme.primary
     val onBackground = MaterialTheme.colorScheme.onBackground
-    val surfaceColor = MaterialTheme.colorScheme.surface
+    val surface = MaterialTheme.colorScheme.surface
 
-    if (bpmList.isNotEmpty()) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = surface),
+        elevation = CardDefaults.cardElevation(6.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                Text("Frecuencia Cardíaca", style = MaterialTheme.typography.titleMedium)
                 Text(
-                    text = "Frecuencia Cardíaca",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = onBackground
-                )
-
-                Text(
-                    text = "${bpmList.last().toInt()} BPM",
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = primaryColor
+                    "${bpmList.last().toInt()} BPM",
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    color = primary
                 )
             }
 
@@ -77,46 +116,32 @@ fun DashboardContent(
             LineChart(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(280.dp)
-                    .background(
-                        color = surfaceColor,
-                        shape = MaterialTheme.shapes.medium
-                    )
-                    .padding(16.dp),
+                    .height(240.dp)
+                    .background(surface, MaterialTheme.shapes.medium)
+                    .padding(12.dp),
                 data = listOf(
                     Line(
                         label = "BPM",
                         values = bpmList,
-                        color = SolidColor(primaryColor),
-                        firstGradientFillColor = primaryColor.copy(alpha = 0.2f),
+                        color = SolidColor(primary),
+                        firstGradientFillColor = primary.copy(alpha = 0.2f),
                         secondGradientFillColor = Color.Transparent,
-                        strokeAnimationSpec = tween(2000, easing = EaseInOutCubic),
-                        gradientAnimationDelay = 1000,
-                        drawStyle = DrawStyle.Stroke(width = 3.dp),
-
+                        strokeAnimationSpec = tween(0, easing = EaseInOutCubic),
+                        drawStyle = DrawStyle.Stroke(width = 2.dp),
                     )
                 ),
-                animationMode = AnimationMode.Together(delayBuilder = { it * 500L }),
-//                zeroLineProperties = ZeroLineProperties(
-//                    enabled = true,
-//                    ),
-//                minValue = -40.0,
-//                maxValue = 130.0
+                animationMode = AnimationMode.Together(delayBuilder = { 0 }),
             )
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = "Rango normal: 60-100 BPM",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = onBackground.copy(alpha = 0.7f)
-                )
-
+                Text("Rango normal", style = MaterialTheme.typography.labelSmall)
                 if (bpmList.last() > 130 || bpmList.last() < 60) {
                     Text(
-                        text = if (bpmList.last() > 130) "¡Alta frecuencia!" else "¡Baja frecuencia!",
+                        text = if (bpmList.last() > 130)
+                            "¡BPM alto!" else "¡BPM bajo!",
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = MaterialTheme.colorScheme.error
                         )
@@ -124,55 +149,94 @@ fun DashboardContent(
                 }
             }
         }
-    } else {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(22.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "Sin datos para mostrar",
-                style = MaterialTheme.typography.bodyMedium,
-                color = onBackground.copy(alpha = 0.6f)
-            )
-        }
     }
 }
 
 
 
 @Composable
-fun InfoDrawer(viewModel: DashboardViewModel) {
-    val title by viewModel.taskTitle.observeAsState("")
-    val description by viewModel.taskDescription.observeAsState("")
-
-    ModalBottomSheet(onDismissRequest = { viewModel.toggleAddTaskDrawe() }) {
+fun WeatherCard(weather: WeatherModel) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(6.dp)
+    ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            Text(
+                text = "${weather.location.name}, ${weather.location.country}",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold
+            )
 
-            Text("Información de sistema", style = MaterialTheme.typography.headlineSmall)
-            Spacer(Modifier.height(16.dp))
-
-            Text("Título actual:", style = MaterialTheme.typography.labelMedium)
-            Text(title.ifEmpty { "N/A" }, fontWeight = FontWeight.Bold)
-
-            Spacer(Modifier.height(12.dp))
-
-            Text("Descripción:", style = MaterialTheme.typography.labelMedium)
-            Text(description.ifEmpty { "Sin descripción" }, fontWeight = FontWeight.Bold)
-
-            Spacer(Modifier.height(24.dp))
-
-            Button(
-                onClick = { viewModel.toggleAddTaskDrawe() },
-                modifier = Modifier.align(Alignment.End)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text("Cerrar")
+                // Uncomment if using Coil or Glide-Compose
+                // AsyncImage(
+                //     model = "https:${weather.current.condition.icon}",
+                //     contentDescription = weather.current.condition.text,
+                //     modifier = Modifier.size(64.dp)
+                // )
+
+                Column {
+                    Text(
+                        text = "${weather.current.temp_c}°C",
+                        style = MaterialTheme.typography.displaySmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = weather.current.condition.text,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            WeatherDetailItem(
+                icon = Icons.Default.WaterDrop,
+                "Humedad",
+                "${weather.current.humidity}%"
+            )
+            WeatherDetailItem(
+                icon = Icons.Default.WindPower,
+                "Viento",
+                "${weather.current.wind_kph} km/h"
+            )
+            WeatherDetailItem(
+                icon = Icons.Default.DeviceThermostat,
+                "Sensación",
+                "${weather.current.feelslike_c}°C"
+            )
         }
+    }
+}
+
+@Composable
+fun WeatherDetailItem(
+    icon: ImageVector,
+    title: String,
+    value: String
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row {
+            Icon(
+                imageVector = icon,
+                contentDescription = title,
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(title, style = MaterialTheme.typography.bodyMedium)
+        }
+
+        Text(value, style = MaterialTheme.typography.bodyMedium)
     }
 }

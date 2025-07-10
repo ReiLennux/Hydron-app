@@ -19,7 +19,6 @@ import com.undefined.hydron.domain.models.Response
 import com.undefined.hydron.domain.models.UserModel
 import com.undefined.hydron.domain.useCases.auth.AuthUseCases
 import com.undefined.hydron.domain.useCases.dataStore.DataStoreUseCases
-import com.undefined.hydron.infrastructure.receivers.PhoneMessageReceiver
 import com.undefined.hydron.presentation.shared.navigation.enums.Routes
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,13 +31,12 @@ class MainScreenViewModel @Inject constructor(
     private val _fireAuth: FirebaseAuth,
     private val _dataStoreUseCases: DataStoreUseCases,
     private val _auth: AuthUseCases,
-    val receiver: PhoneMessageReceiver
 
 ): ViewModel() {
 
     //Variables
-    private val _isLoggedIn = MutableStateFlow(false)
-    val isLoggedIn: StateFlow<Boolean> = _isLoggedIn
+    //private val _isLoggedIn = MutableStateFlow(false)
+    //val isLoggedIn: StateFlow<Boolean> = _isLoggedIn
 
     private val _currentUser = MutableLiveData<UserModel?>()
     val currentUser: MutableLiveData<UserModel?> = _currentUser
@@ -55,7 +53,7 @@ class MainScreenViewModel @Inject constructor(
     // Init
     init {
         getCurrentUser()
-        receiver.simulateMessage()
+        //receiver.simulateMessage()
     }
 
 
