@@ -8,25 +8,40 @@ import javax.inject.Inject
 import androidx.compose.runtime.State
 import androidx.lifecycle.viewModelScope
 import com.undefined.hydron.domain.models.TransferResult
+import com.undefined.hydron.domain.useCases.room.sensors.SensorDataUseCases
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 
 @HiltViewModel
 class PlaceHolderViewModel @Inject constructor(
-    private val transferService: DataTransferService
+    private val transferService: DataTransferService,
+    private val sensorDataUseCases: SensorDataUseCases
 
 ): ViewModel(){
 
 
     init {
-        println("init")
-        //
-    // startTransfer()
+        getAllRecords()
     }
 
 
     private val _transferState = mutableStateOf<TransferState>(TransferState.Idle)
     val transferState: State<TransferState> = _transferState
+
+    private val _totalItems = MutableStateFlow(0)
+    val totalItems: StateFlow<Int> = _totalItems
+
+
+
+    private fun getAllRecords() {
+        viewModelScope.launch {
+            val count = sensorDataUseCases.getTotalCount()
+            _totalItems.value = count
+        }
+    }
+
 
     fun startTransfer() {
         println("startTransfer")

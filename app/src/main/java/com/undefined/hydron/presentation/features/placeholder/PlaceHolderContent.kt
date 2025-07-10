@@ -22,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,11 +38,11 @@ import androidx.navigation.NavController
 fun PlaceHolderContent(
     paddingValues: PaddingValues,
     navController: NavController,
-    message: String = "Contenido no disponible",
     viewModel: PlaceHolderViewModel = hiltViewModel()
 ) {
     val transferState by viewModel.transferState
     var showDialog by remember { mutableStateOf(false) }
+    val totalItems by viewModel.totalItems.collectAsState(initial = 0)
 
     Column(
         modifier = Modifier
@@ -51,12 +52,14 @@ fun PlaceHolderContent(
         verticalArrangement = Arrangement.Center
     ) {
         Text("Estado actual: ${transferState::class.simpleName}")
+        Spacer(modifier = Modifier.height(16.dp))
+        Text("Total de registros: $totalItems")
+        Spacer(modifier = Modifier.height(16.dp))
+
         when (val state = transferState) {
             is PlaceHolderViewModel.TransferState.Idle -> {
                 Button(
                     onClick = {
-                        println("startTransfer")
-
                         viewModel.startTransfer()
                               },
                     modifier = Modifier.padding(8.dp)
