@@ -80,8 +80,6 @@ object AppModule {
             .fallbackToDestructiveMigration(false)
             .build()
 
-    @Provides
-    fun provideTaskDao(db: MainDatabase): ITaskDao = db.taskDao()
 
     @Provides
     fun provideTodoRepository(dao: ITaskDao): ITodoRepository = TodoRepositoryImpl(dao)
@@ -166,13 +164,13 @@ object AppModule {
         authUseCases: AuthUseCases,
         firebaseAuth: FirebaseAuth
     ): DataTransferService {
-        val firebaseUser = firebaseAuth.currentUser
-            ?: throw IllegalStateException("FirebaseUser is not authenticated")
+//        val firebaseUser = firebaseAuth.currentUser
+//            ?: throw IllegalStateException("FirebaseUser is not authenticated")
 
         return DataTransferService(
             sensorDataUseCases,
             firebaseDatabase,
-            firebaseUser
+//            firebaseUser
         )
     }
 

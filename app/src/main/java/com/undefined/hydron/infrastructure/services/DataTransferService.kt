@@ -18,7 +18,7 @@ import kotlin.math.min
 class DataTransferService @Inject constructor(
     private val sensorDataUseCases: SensorDataUseCases,
     private val firebaseDatabase: FirebaseDatabase,
-    private val firebaseUser: FirebaseUser
+//    private val firebaseUser: FirebaseUser
 ) {
 
     private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -90,7 +90,7 @@ class DataTransferService @Inject constructor(
     }
 
     private suspend fun uploadBatch(batch: List<SensorData>) {
-        val userId = firebaseUser.uid
+        val userId = 0
         val updatesMap = batch.associate { entity ->
             "sensor_data/$userId/${entity.id}" to entity.toFirebaseMap()
         }

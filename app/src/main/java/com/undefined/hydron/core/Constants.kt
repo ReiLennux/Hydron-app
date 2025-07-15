@@ -14,4 +14,12 @@ object Constants {
     const val USER_HEART_DISEASE = "user_heart_disease"
     const val USER_CHRONIC_DISEASE_DETAILS = "user_chronic_disease_details"
 
+    //ROOM Database
+    const val DATABASE_NAME = "Hydron_db"
+
+    //DataClient
+    const val MONITORING_PATH = "/switch-monitoring"
+    const val KEY_IS_MONITORING = "isMonitoring"
+
+
 }
