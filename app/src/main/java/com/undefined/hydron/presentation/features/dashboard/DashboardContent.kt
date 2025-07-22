@@ -89,7 +89,6 @@ fun NoDataMessage() {
 @Composable
 fun BpmCard(bpmList: List<Double>) {
     val primary = MaterialTheme.colorScheme.primary
-    val onBackground = MaterialTheme.colorScheme.onBackground
     val surface = MaterialTheme.colorScheme.surface
 
     Card(
@@ -123,7 +122,7 @@ fun BpmCard(bpmList: List<Double>) {
                     Line(
                         label = "BPM",
                         values = bpmList,
-                        color = SolidColor(primary),
+                        color =SolidColor(primary),
                         firstGradientFillColor = primary.copy(alpha = 0.2f),
                         secondGradientFillColor = Color.Transparent,
                         strokeAnimationSpec = tween(0, easing = EaseInOutCubic),

@@ -17,9 +17,9 @@ object Constants {
     //ROOM Database
     const val DATABASE_NAME = "Hydron_db"
 
-    //DataClient
-    const val MONITORING_PATH = "/switch-monitoring"
-    const val KEY_IS_MONITORING = "isMonitoring"
 
+    //Toggle Monitor
+    const val PATH_TOGGLE_MONITOR = "/monitoring_state"
+    const val KEY_IS_MONITORING_TOGGLE = "isMonitoring"
 
 }

@@ -1,5 +1,14 @@
 <resources>
     <string name="app_name">Hydron</string>
+
+    <!--App Logo strings-->
+    <string name="val_carrousel_message_1">Pulse aquí para habilitar el monitoreo</string>
+    <string name="val_carrousel_message_2">No está monitoreando</string>
+    <string name="val_carrousel_message_3">Toque para activar el seguimiento</string>
+    <string name="val_carrousel_message_4">Monitoreo desactivado</string>
+    <string name="val_monitoring_state">Monitoreando…</string>
+
+
     <string name="val_email_empty">El campo no puede estar vacio.</string>
     <string name="val_email_invalid">No es un email valido.</string>
     <string name="val_password_empty">El campo no puede estar vacio.</string>
@@ -7,7 +16,6 @@
     <string name="val_password_match">Las contraseñas no coinciden.</string>
     <string name="val_text_empty">El campo no puede estar vacio.</string>
     <string name="val_text_invalid">Solo se permiten letras y numeros.</string>
-
 
     <!--Register strings-->
     <string name="val_email_label">Correo Electronico</string>

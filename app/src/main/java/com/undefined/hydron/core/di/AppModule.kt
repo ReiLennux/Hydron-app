@@ -2,6 +2,8 @@ package com.undefined.hydron.core.di
 
 import android.content.Context
 import androidx.room.Room
+import com.google.android.gms.wearable.DataClient
+import com.google.android.gms.wearable.Wearable
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import com.undefined.hydron.domain.interfaces.IWeatherApi
@@ -178,6 +180,12 @@ object AppModule {
     @Singleton
     fun provideFirebaseDatabase(): FirebaseDatabase {
         return FirebaseDatabase.getInstance()
+    }
+
+    @Provides
+    @Singleton
+    fun provideDataClient(@ApplicationContext context: Context): DataClient {
+        return Wearable.getDataClient(context)
     }
 
 
