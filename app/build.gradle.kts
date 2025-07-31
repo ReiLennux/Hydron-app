@@ -11,7 +11,7 @@ plugins {
 
 android {
     namespace = "com.undefined.hydron"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.undefined.hydron"
@@ -56,6 +56,7 @@ android {
             "-Xopt-in=androidx.compose.material3.ExperimentalMaterial3Api",
             "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
         )
+        freeCompilerArgs = listOf("-XXLanguage:+PropertyParamAnnotationDefaultTargetMode")
     }
 
     buildFeatures {
@@ -76,6 +77,7 @@ dependencies {
 
     // Hilt
     implementation(libs.hilt.android)
+    implementation(libs.play.services.location)
     kapt(libs.hilt.compiler)
 
     // Room
@@ -119,15 +121,23 @@ dependencies {
     implementation (libs.converter.gson)
 
     //Wear
-    implementation(libs.play.services.wearable.v1810)
+    //implementation(libs.play.services.wearable.v1810)
 
 
-    implementation(libs.retrofit.v290)
-    implementation(libs.converter.gson.v290)
+    //implementation(libs.retrofit.v290)
+    //implementation(libs.converter.gson.v290)
 
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
 
+// Core Utility Library
+    implementation("com.google.maps.android:android-maps-utils:3.12.0")
+
+// Kotlin Extensions for Utility Library
+    implementation("com.google.maps.android:maps-utils-ktx:5.2.0") // officially supported :contentReference[oaicite:1]{index=1}
+
+// Jetpack Compose map UI components
+    implementation("com.google.maps.android:maps-compose:6.7.0")
 }
 
 kapt {
