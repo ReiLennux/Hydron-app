@@ -4,6 +4,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
+import com.undefined.hydron.core.Constants.USER_AGE
 import com.undefined.hydron.core.Constants.USER_BIRTHDATE
 import com.undefined.hydron.core.Constants.USER_CHRONIC_DISEASE_DETAILS
 import com.undefined.hydron.core.Constants.USER_DIABETES
@@ -30,16 +32,19 @@ import java.time.Period
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 
-
 @OptIn(DelicateCoroutinesApi::class)
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val _dataStore: DataStoreUseCases
+    private val _dataStore: DataStoreUseCases,
+    private val _fireAuth: FirebaseAuth
 ): ViewModel() {
 
     // region Flow
     private val _isLoading = MutableStateFlow<Response<Boolean>?>(null)
     val isLoading: MutableStateFlow<Response<Boolean>?> = _isLoading
+
+    private val _logoutComplete = MutableStateFlow(false)
+    val logoutComplete: MutableStateFlow<Boolean> = _logoutComplete
     // endregion
 
     // region Form Values
@@ -65,7 +70,7 @@ class ProfileViewModel @Inject constructor(
             val sexString = _dataStore.getDataString(USER_SEX)
             val sex = try {
                 SexType.valueOf(sexString)
-            } catch (e: IllegalArgumentException) {
+            } catch (_: IllegalArgumentException) {
                 SexType.PrefieroNoDecirlo
             }
 
@@ -76,7 +81,6 @@ class ProfileViewModel @Inject constructor(
             val hasDiabetes = _dataStore.getDataBoolean(USER_DIABETES)
             val hasHeartDisease = _dataStore.getDataBoolean(USER_HEART_DISEASE)
             val cDDetails = _dataStore.getDataString(USER_CHRONIC_DISEASE_DETAILS)
-
 
             _user.postValue(
                 UserModel(
@@ -90,7 +94,7 @@ class ProfileViewModel @Inject constructor(
                     hasDiabetes = hasDiabetes,
                     hasHeartDisease = hasHeartDisease,
                     chronicDiseaseDetails = cDDetails
-                    )
+                )
             )
             _email.postValue(email)
 
@@ -98,13 +102,12 @@ class ProfileViewModel @Inject constructor(
         } catch (e: Exception) {
             _isLoading.value = Response.Error(e)
             ToastManager.showToast(isSuccess = false, message = e.message.toString())
-
         }
-
     }
 
     fun resetState() {
         _isLoading.value = null
+        _logoutComplete.value = false
     }
 
     fun getAge(birthDateString: String): String {
@@ -114,14 +117,44 @@ class ProfileViewModel @Inject constructor(
             val currentDate = LocalDate.now()
             val age = Period.between(birthDate, currentDate).years
             "$age"
-        } catch (e: DateTimeParseException) {
+        } catch (_: DateTimeParseException) {
             "00"
         }
     }
 
-    fun logOut(){
-        viewModelScope.launch {
-            //_dataStore.clearDataStore()
+    fun logOut(): Boolean {
+        return try {
+            _isLoading.value = Response.Loading
+
+            clearAllUserData()
+            _fireAuth.signOut()
+
+            _user.postValue(UserModel())
+            _email.postValue("")
+            _isLoading.value = Response.Success(true)
+
+            ToastManager.showToast("Sesión cerrada exitosamente",true)
+            true
+        } catch (e: Exception) {
+            _isLoading.value = Response.Error(e)
+            ToastManager.showToast( "Error al cerrar sesión: ${e.message}", false)
+            false
         }
     }
+
+    private fun clearAllUserData() = viewModelScope.launch {
+        _dataStore.setDataString(USER_UID, "")
+        _dataStore.setDataString(USER_NAME, "")
+        _dataStore.setDataString(USER_EMAIL, "")
+        _dataStore.setDataInt(USER_AGE, 0)
+        _dataStore.setDataString(USER_SEX, "")
+        _dataStore.setDataString(USER_BIRTHDATE, "")
+        _dataStore.setDouble(USER_HEIGHT, 0.0)
+        _dataStore.setDouble(USER_WEIGHT, 0.0)
+        _dataStore.setDataBoolean(USER_HYPERTENSION, false)
+        _dataStore.setDataBoolean(USER_DIABETES, false)
+        _dataStore.setDataBoolean(USER_HEART_DISEASE, false)
+        _dataStore.setDataString(USER_CHRONIC_DISEASE_DETAILS, "")
+    }
+
 }

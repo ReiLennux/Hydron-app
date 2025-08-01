@@ -1,6 +1,7 @@
 package com.undefined.hydron.domain.repository
 
 import com.undefined.hydron.infrastructure.services.DataStoreService
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class DataStoreRepositoryImpl @Inject constructor(
@@ -22,6 +23,10 @@ class DataStoreRepositoryImpl @Inject constructor(
         return _dataStoreService.getDataBoolean(key)
     }
 
+    fun getDataBooleanFlow(key: String): Flow<Boolean> {
+        return _dataStoreService.getDataBooleanFlow(key)
+    }
+
     suspend fun setDataInt(key: String, value: Int) {
         _dataStoreService.setDataInt(key, value)
     }
@@ -37,6 +42,4 @@ class DataStoreRepositoryImpl @Inject constructor(
     suspend fun getDouble(key: String): Double {
         return _dataStoreService.getDouble(key)
     }
-
-
 }

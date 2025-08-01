@@ -1,5 +1,6 @@
 package com.undefined.hydron.presentation
 
+
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -17,6 +18,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
 
+
         enableEdgeToEdge()
         setContent {
             HydronTheme {
@@ -25,6 +27,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     MainScreen()
+
                 }
             }
         }

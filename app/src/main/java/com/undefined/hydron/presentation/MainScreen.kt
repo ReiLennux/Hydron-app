@@ -1,6 +1,5 @@
 package com.undefined.hydron.presentation
 
-import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -19,29 +18,23 @@ import com.undefined.hydron.presentation.shared.components.navigation.TopAppBar
 import com.undefined.hydron.presentation.shared.navigation.enums.Routes
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
-import androidx.core.content.ContextCompat
-import com.undefined.hydron.infrastructure.services.ApiForegroundService
 import com.undefined.hydron.presentation.shared.navigation.mainRoutes
+import com.undefined.hydron.presentation.shared.viewmodels.LoginCheckViewModel
 
 
 @Composable
-fun MainScreen() {
+fun MainScreen(
+
+) {
     val viewModel: MainScreenViewModel = hiltViewModel()
+    val loginViewModel: LoginCheckViewModel = hiltViewModel()
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-    //val currentUser by viewModel.currentUser.observeAsState(initial = null)
     val isVisible = remember { mutableStateOf(true) }
 
 
-    val context = LocalContext.current
-    LaunchedEffect(Unit) {
-        val intent = Intent(context, ApiForegroundService::class.java)
-        ContextCompat.startForegroundService(context, intent)
-    }
-
-    val navigateToLogin by viewModel.navigateToLogin.collectAsState()
+    val navigateToLogin by loginViewModel.navigateToLogin.collectAsState()
 
     LaunchedEffect(navigateToLogin) {
         if (navigateToLogin) {
@@ -51,7 +44,6 @@ fun MainScreen() {
         }
     }
 
-    //MainScreenView(modifier = Modifier)
     Scaffold(
         topBar = {
             TopAppBar(visible = viewModel.verifyRouteTop(currentRoute = currentRoute))

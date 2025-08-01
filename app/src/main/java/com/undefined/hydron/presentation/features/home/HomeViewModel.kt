@@ -1,99 +1,85 @@
 package com.undefined.hydron.presentation.features.home
 
+import android.app.Application
 import android.content.Context
+import android.location.Location
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.ViewModel
-import com.undefined.hydron.infrastructure.services.DataTransferService
-import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
-import androidx.compose.runtime.State
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.undefined.hydron.domain.models.TransferResult
-import com.undefined.hydron.domain.useCases.room.sensors.SensorDataUseCases
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import com.google.android.gms.location.*
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.launch
-
+import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val transferService: DataTransferService,
-    private val sensorDataUseCases: SensorDataUseCases,
-): ViewModel(){
+    application: Application,
+    @ApplicationContext private val context: Context
+) : AndroidViewModel(application) {
 
+    private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(application)
 
+    private val _location = MutableLiveData<Location?>()
+    val location: LiveData<Location?> = _location
 
+    private var locationCallback: LocationCallback? = null
+    private var lastLocation: Location? = null
+    private val minDistanceMeters = 3f // 3mts
 
-    init {
-        getAllRecords()
-    }
-
-
-    private val _transferState = mutableStateOf<TransferState>(TransferState.Idle)
-    val transferState: State<TransferState> = _transferState
-
-    private val _totalItems = MutableStateFlow(0)
-    val totalItems: StateFlow<Int> = _totalItems
-
-    private val _isMonitoring = MutableStateFlow(false)
-    val isMonitoring: StateFlow<Boolean> = _isMonitoring
-
-
-    fun setMonitoringState(context: Context, value: Boolean) {
-        _isMonitoring.value = value
-        Log.d("HomeViewModel", "Toggled isMonitoring: $value")
-
-        viewModelScope.launch {
+    fun startLocationUpdates() {
+        val locationRequest = LocationRequest.create().apply {
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+            interval = 5000L // 5s
+            fastestInterval = 2000L
         }
-    }
 
-    private fun getAllRecords() {
-        viewModelScope.launch {
-            val count = sensorDataUseCases.getTotalCount()
-            _totalItems.value = count
-        }
-    }
-
-
-    fun startTransfer() {
-        println("startTransfer")
-        _transferState.value = TransferState.Loading(0)
-
-        transferService.startDataTransfer { result ->
-            // Garantiza que el cambio de estado ocurre en el hilo principal
-            viewModelScope.launch {
-                when (result) {
-                    TransferResult.Success -> {
-                        _transferState.value = TransferState.Success
-                    }
-                    is TransferResult.Progress -> {
-                        _transferState.value = TransferState.Loading(result.percentage)
-                    }
-                    is TransferResult.Error -> {
-                        _transferState.value = TransferState.Error(result.exception.message)
-                    }
-                    TransferResult.Cancelled -> {
-                        _transferState.value = TransferState.Cancelled
-                    }
+        locationCallback = object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult) {
+                val newLocation = locationResult.lastLocation
+                if (newLocation != null && shouldUpdate(newLocation)) {
+                    _location.postValue(newLocation)
+                    lastLocation = newLocation
                 }
             }
         }
 
-        println("endTransfer")
+        try {
+            fusedLocationClient.requestLocationUpdates(
+                locationRequest,
+                locationCallback!!,
+                context.mainLooper
+            )
+        } catch (e: SecurityException) {
+            Log.e("HomeViewModel", "Permiso de ubicación no otorgado", e)
+        }
     }
 
-    fun cancelTransfer() {
-        transferService.cancelTransfer()
-        _transferState.value = TransferState.Cancelled
+    fun stopLocationUpdates() {
+        locationCallback?.let {
+            fusedLocationClient.removeLocationUpdates(it)
+        }
     }
 
-    sealed class TransferState {
-        object Idle : TransferState()
-        data class Loading(val progress: Int) : TransferState()
-        object Success : TransferState()
-        object Cancelled : TransferState()
-        data class Error(val message: String?) : TransferState()
+    private fun shouldUpdate(newLoc: Location): Boolean {
+        val last = lastLocation ?: return true
+        return last.distanceTo(newLoc) >= minDistanceMeters
+    }
+
+    fun fetchLocationOnce() {
+        viewModelScope.launch {
+            try {
+                val location = fusedLocationClient.lastLocation
+                location.addOnSuccessListener {
+                    _location.postValue(it)
+                }
+            } catch (_: SecurityException) {
+                _location.postValue(null)
+            }
+        }
     }
 
 }
+

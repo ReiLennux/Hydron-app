@@ -8,6 +8,8 @@ data class DataStoreUseCases(
     val setDataInt: SetDataInt,
     val getDataInt: GetDataInt,
     val setDouble: SetDouble,
-    val getDouble: GetDouble
+    val getDouble: GetDouble,
+    val getDataBooleanFlow: GetDataBooleanFlow,
+
 
 )

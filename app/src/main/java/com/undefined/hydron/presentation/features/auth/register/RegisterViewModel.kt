@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.undefined.hydron.core.Constants.USER_AGE
 import com.undefined.hydron.core.Constants.USER_BIRTHDATE
 import com.undefined.hydron.core.Constants.USER_CHRONIC_DISEASE_DETAILS
 import com.undefined.hydron.core.Constants.USER_DIABETES
@@ -256,6 +257,7 @@ class RegisterViewModel @Inject constructor(
         _dataStoreUseCases.setDataString.invoke(USER_UID, user.uid!!)
         _dataStoreUseCases.setDataString.invoke(USER_NAME, user.name)
         _dataStoreUseCases.setDataString.invoke(USER_EMAIL, email)
+        _dataStoreUseCases.setDataInt.invoke(USER_AGE, getAge(user.birthDate))
         _dataStoreUseCases.setDataString.invoke(USER_SEX, user.sex.toString())
         _dataStoreUseCases.setDataString.invoke(USER_BIRTHDATE, user.birthDate)
         _dataStoreUseCases.setDouble.invoke(USER_HEIGHT, user.height)
@@ -264,6 +266,13 @@ class RegisterViewModel @Inject constructor(
         _dataStoreUseCases.setDataBoolean.invoke(USER_DIABETES, user.hasDiabetes)
         _dataStoreUseCases.setDataBoolean.invoke(USER_HEART_DISEASE, user.hasHeartDisease)
         _dataStoreUseCases.setDataString.invoke(USER_CHRONIC_DISEASE_DETAILS, user.chronicDiseaseDetails?: "")
+    }
+
+    private fun getAge(dateString: String): Int {
+        val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+        val date = LocalDate.parse(dateString, formatter)
+        val now = LocalDate.now()
+        return now.year - date.year
     }
 
     //endregion

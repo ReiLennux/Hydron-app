@@ -25,6 +25,7 @@ import androidx.navigation.NavController
 import com.undefined.hydron.domain.models.hasAnyDisease
 import com.undefined.hydron.presentation.shared.navigation.enums.Routes
 import com.undefined.hydron.R
+import kotlinx.coroutines.launch
 
 @SuppressLint("SuspiciousIndentation")
 @Composable
@@ -340,6 +341,8 @@ fun LogOut(
     navController: NavController,
     viewModel: ProfileViewModel
 ) {
+    val coroutineScope = rememberCoroutineScope()
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -348,10 +351,14 @@ fun LogOut(
     ) {
         TextButton(
             onClick = {
-                viewModel.logOut()
-                navController.navigate(Routes.HOME.name) {
-                    popUpTo(navController.graph.startDestinationId) {
-                        inclusive = false
+                coroutineScope.launch {
+                    val success = viewModel.logOut()
+                    if (success) {
+                        navController.navigate(Routes.LOGIN.name) {
+                            popUpTo(navController.graph.startDestinationId) {
+                                inclusive = true
+                            }
+                        }
                     }
                 }
             }
@@ -364,3 +371,4 @@ fun LogOut(
         }
     }
 }
+
