@@ -49,8 +49,8 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = Response.Loading
             try {
-                val weather = weatherUseCases.getCurrentWeather(_location.value!!)
-                _isLoading.value = Response.Success(weather)
+                //val weather = weatherUseCases.getCurrentWeather(_location.value!!)
+                //_isLoading.value = Response.Success(weather)
             } catch (e: Exception) {
                 _isLoading.value = Response.Error(e)
             }

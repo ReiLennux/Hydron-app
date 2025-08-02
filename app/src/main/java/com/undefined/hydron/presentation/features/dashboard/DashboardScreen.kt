@@ -15,7 +15,7 @@ fun DashboardScreen(
 
     Scaffold { innerPadding ->
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-            DashboardContent(viewModel)
+            DashboardContent()
 
         }
     }
