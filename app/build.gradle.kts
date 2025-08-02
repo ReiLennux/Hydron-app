@@ -138,6 +138,9 @@ dependencies {
 
 // Jetpack Compose map UI components
     implementation("com.google.maps.android:maps-compose:6.7.0")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
+
 }
 
 kapt {
