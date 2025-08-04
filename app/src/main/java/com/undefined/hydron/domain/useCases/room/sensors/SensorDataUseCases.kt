@@ -6,6 +6,13 @@ data class SensorDataUseCases(
     val getSensorDataByType: GetSensorDataByType,
     val deleteSensorData: DeleteSensorData,
 
+    //db
+    val getRecentSensorData: GetRecentSensorData,
+    val getPendingSensorData: GetPendingSensorData,
+    val markAsSent: MarkAsSent,
+    val getSensorDataInTimeRange: GetSensorDataInTimeRange,
+    val getActiveSensorTypes: GetActiveSensorTypes,
+
     //dbBatch
     val getTotalCount: GetTotalCount,
     val getRecordsBatch: GetRecordsBatch,

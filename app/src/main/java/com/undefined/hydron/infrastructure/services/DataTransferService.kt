@@ -1,5 +1,6 @@
 package com.undefined.hydron.infrastructure.services
 
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.FirebaseDatabase
 import com.undefined.hydron.domain.models.TransferResult
@@ -18,7 +19,7 @@ import kotlin.math.min
 class DataTransferService @Inject constructor(
     private val sensorDataUseCases: SensorDataUseCases,
     private val firebaseDatabase: FirebaseDatabase,
-//    private val firebaseUser: FirebaseUser
+    private val firebaseAuth: FirebaseAuth
 ) {
 
     private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -90,7 +91,7 @@ class DataTransferService @Inject constructor(
     }
 
     private suspend fun uploadBatch(batch: List<SensorData>) {
-        val userId = 0
+        val userId = firebaseAuth.currentUser?.uid
         val updatesMap = batch.associate { entity ->
             "sensor_data/$userId/${entity.id}" to entity.toFirebaseMap()
         }

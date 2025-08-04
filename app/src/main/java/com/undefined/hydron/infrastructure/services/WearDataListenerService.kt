@@ -30,7 +30,7 @@ class WearDataListenerService : WearableListenerService() {
             val payload = String(messageEvent.data, Charsets.UTF_8)
             Log.d("DATA_RECIVED", "Mensaje recibido: $payload")
 
-            val value = payload.toFloatOrNull()
+            val value = payload.toDoubleOrNull()
             if (value != null) {
                 val data = SensorData(
                     sensorType = SensorType.HEART_RATE, 

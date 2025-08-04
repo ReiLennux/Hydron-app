@@ -2,22 +2,29 @@ package com.undefined.hydron.domain.models.entities
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import kotlinx.serialization.Serializable
 
 @Entity(tableName = "sensor_data")
 data class SensorData(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val sensorType: SensorType,
-    val value: Float,
+    val value: Double,
     val takenAt: Long = System.currentTimeMillis(),
     val isUploaded: Boolean = false
 )
 
+@Serializable
+data class SensorMessage(
+    val sensorType: String,
+    val value: Float,
+    val timestamp: Long
+)
 
 
 enum class SensorType {
     HEART_RATE,
-    STEPS,
+    STEP_COUNT,
     TEMPERATURE,
 }
 

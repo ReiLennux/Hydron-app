@@ -14,8 +14,8 @@ fun HomeScreen(
 ) {
 
     Scaffold(
-        content = { innerPadding ->
-            HomeContent(paddingValues = innerPadding, navController = navController)
+        content = { paddingValues ->
+            HomeContent(paddingValues = paddingValues)
         }
     )
     HomeView(modifier = Modifier.fillMaxSize(), navController = navController)

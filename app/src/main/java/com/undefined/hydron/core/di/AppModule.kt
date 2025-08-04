@@ -2,29 +2,33 @@ package com.undefined.hydron.core.di
 
 import android.content.Context
 import androidx.room.Room
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.wearable.DataClient
+import com.google.android.gms.wearable.MessageClient
 import com.google.android.gms.wearable.Wearable
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.FirebaseDatabase
-import com.undefined.hydron.domain.interfaces.IWeatherApi
-import com.undefined.hydron.domain.interfaces.dao.ISensorDataDao
-import com.undefined.hydron.domain.interfaces.dao.ITaskDao
+import com.undefined.hydron.domain.interfaces.ILocationProvider
+import com.undefined.hydron.domain.interfaces.ITrackerManager
+import com.undefined.hydron.domain.interfaces.ITrackingController
 import com.undefined.hydron.domain.interfaces.dao.IWearMessageDao
-import com.undefined.hydron.domain.repository.AuthRepositoryImpl
+import com.undefined.hydron.domain.managers.OrchestratorDataSyncManager
+import com.undefined.hydron.domain.managers.PayloadProvider
+import com.undefined.hydron.domain.managers.RiskAnalyzer
+import com.undefined.hydron.domain.managers.TrackerManager
+import com.undefined.hydron.domain.managers.TrackingController
 import com.undefined.hydron.domain.repository.DataStoreRepositoryImpl
-import com.undefined.hydron.domain.repository.SensorDataRepositoryImpl
-import com.undefined.hydron.domain.repository.interfaces.ITodoRepository
-import com.undefined.hydron.domain.repository.TodoRepositoryImpl
-import com.undefined.hydron.domain.repository.WeatherImpl
 import com.undefined.hydron.domain.repository.interfaces.IAuthRepository
+import com.undefined.hydron.domain.repository.interfaces.IBindDataRepository
 import com.undefined.hydron.domain.repository.interfaces.ISensorDataRepository
-import com.undefined.hydron.domain.repository.interfaces.IWeather
 import com.undefined.hydron.domain.useCases.auth.AuthUseCases
-import com.undefined.hydron.domain.useCases.auth.GetUser
-import com.undefined.hydron.domain.useCases.auth.LoginUser
-import com.undefined.hydron.domain.useCases.auth.RegisterUser
+import com.undefined.hydron.domain.useCases.bindData.BindData
+import com.undefined.hydron.domain.useCases.bindData.BindDataUseCases
 import com.undefined.hydron.domain.useCases.dataStore.DataStoreUseCases
 import com.undefined.hydron.domain.useCases.dataStore.GetDataBoolean
+import com.undefined.hydron.domain.useCases.dataStore.GetDataBooleanFlow
 import com.undefined.hydron.domain.useCases.dataStore.GetDataInt
 import com.undefined.hydron.domain.useCases.dataStore.GetDataString
 import com.undefined.hydron.domain.useCases.dataStore.GetDouble
@@ -32,19 +36,8 @@ import com.undefined.hydron.domain.useCases.dataStore.SetDataBoolean
 import com.undefined.hydron.domain.useCases.dataStore.SetDataInt
 import com.undefined.hydron.domain.useCases.dataStore.SetDataString
 import com.undefined.hydron.domain.useCases.dataStore.SetDouble
-import com.undefined.hydron.domain.useCases.room.sensors.AddSensorData
-import com.undefined.hydron.domain.useCases.room.sensors.DeleteSensorData
-import com.undefined.hydron.domain.useCases.room.sensors.GetRecordsBatch
-import com.undefined.hydron.domain.useCases.room.sensors.GetSensorDataByType
-import com.undefined.hydron.domain.useCases.room.sensors.GetTotalCount
-import com.undefined.hydron.domain.useCases.room.sensors.MarkAsUploaded
-import com.undefined.hydron.domain.useCases.room.sensors.ResetRecords
 import com.undefined.hydron.domain.useCases.room.sensors.SensorDataUseCases
-import com.undefined.hydron.domain.useCases.room.tasks.AddTask
-import com.undefined.hydron.domain.useCases.room.tasks.DeleteTask
-import com.undefined.hydron.domain.useCases.room.tasks.GetTasks
 import com.undefined.hydron.domain.useCases.room.tasks.TaskRoomUseCases
-import com.undefined.hydron.domain.useCases.room.tasks.UpdateTask
 import com.undefined.hydron.domain.useCases.wear.HandleWearMessage
 import com.undefined.hydron.domain.useCases.weather.GetCurrentWeather
 import com.undefined.hydron.domain.useCases.weather.WeatherUseCases
@@ -61,6 +54,16 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
+
+    // Database
+    @Singleton
+    @Provides
+    fun provideDatabase(@ApplicationContext context: Context): MainDatabase =
+        Room.databaseBuilder(context, MainDatabase::class.java, "Hydron_db")
+            .fallbackToDestructiveMigration(false)
+            .build()
+
+    // DataStore Use Cases
     @Singleton
     @Provides
     fun provideDataStoreUseCases(dataStoreRepository: DataStoreRepositoryImpl): DataStoreUseCases =
@@ -72,91 +75,79 @@ object AppModule {
             setDataInt = SetDataInt(dataStoreRepository),
             getDataInt = GetDataInt(dataStoreRepository),
             setDouble = SetDouble(dataStoreRepository),
-            getDouble = GetDouble(dataStoreRepository)
+            getDouble = GetDouble(dataStoreRepository),
+            getDataBooleanFlow = GetDataBooleanFlow(dataStoreRepository)
         )
 
-    @Singleton
+    // Task Use Cases
     @Provides
-    fun provideDatabase(@ApplicationContext context: Context): MainDatabase =
-        Room.databaseBuilder(context, MainDatabase::class.java, "Hydron_db")
-            .fallbackToDestructiveMigration(false)
-            .build()
-
-
-    @Provides
-    fun provideTodoRepository(dao: ITaskDao): ITodoRepository = TodoRepositoryImpl(dao)
-
-    @Provides
-    fun provideRoomUseCases(repository: ITodoRepository): TaskRoomUseCases {
+    fun provideRoomUseCases(repository: com.undefined.hydron.domain.repository.interfaces.ITodoRepository): TaskRoomUseCases {
         return TaskRoomUseCases(
-            addTask = AddTask(repository),
-            deleteTask = DeleteTask(repository),
-            getTasks = GetTasks(repository),
-            updateTask = UpdateTask(repository)
+            addTask = com.undefined.hydron.domain.useCases.room.tasks.AddTask(repository),
+            deleteTask = com.undefined.hydron.domain.useCases.room.tasks.DeleteTask(repository),
+            getTasks = com.undefined.hydron.domain.useCases.room.tasks.GetTasks(repository),
+            updateTask = com.undefined.hydron.domain.useCases.room.tasks.UpdateTask(repository)
         )
     }
 
+    // Sensor Data Use Cases
     @Provides
-    fun provideHeartRateDao(db: MainDatabase): ISensorDataDao = db.sensorDataDao()
-
-    @Provides
-    fun provideHeartRateRepository(dao: ISensorDataDao): ISensorDataRepository =
-        SensorDataRepositoryImpl(dao)
-
-    @Provides
-    fun provideHeartRateUseCases(repository: ISensorDataRepository): SensorDataUseCases {
+    fun provideSensorDataUseCases(repository: ISensorDataRepository): SensorDataUseCases {
         return SensorDataUseCases(
-            addSensorData = AddSensorData(repository),
-            deleteSensorData = DeleteSensorData(repository),
-            getSensorDataByType = GetSensorDataByType(repository),
-            getTotalCount = GetTotalCount(repository),
-            getRecordsBatch = GetRecordsBatch(repository),
-            resetRecords = ResetRecords(repository),
-            markAsUploaded = MarkAsUploaded(repository)
+            addSensorData = com.undefined.hydron.domain.useCases.room.sensors.AddSensorData(repository),
+            deleteSensorData = com.undefined.hydron.domain.useCases.room.sensors.DeleteSensorData(repository),
+            getSensorDataByType = com.undefined.hydron.domain.useCases.room.sensors.GetSensorDataByType(repository),
+            getTotalCount = com.undefined.hydron.domain.useCases.room.sensors.GetTotalCount(repository),
+            getRecordsBatch = com.undefined.hydron.domain.useCases.room.sensors.GetRecordsBatch(repository),
+            resetRecords = com.undefined.hydron.domain.useCases.room.sensors.ResetRecords(repository),
+            markAsUploaded = com.undefined.hydron.domain.useCases.room.sensors.MarkAsUploaded(repository),
+            getRecentSensorData = com.undefined.hydron.domain.useCases.room.sensors.GetRecentSensorData(repository),
+            getPendingSensorData = com.undefined.hydron.domain.useCases.room.sensors.GetPendingSensorData(repository),
+            markAsSent = com.undefined.hydron.domain.useCases.room.sensors.MarkAsSent(repository),
+            getSensorDataInTimeRange = com.undefined.hydron.domain.useCases.room.sensors.GetSensorDataInTimeRange(repository),
+            getActiveSensorTypes = com.undefined.hydron.domain.useCases.room.sensors.GetActiveSensorTypes(repository)
         )
     }
 
-    @Singleton
-    @Provides
-    fun provideAuthRepository(): IAuthRepository = AuthRepositoryImpl()
-
+    // Auth Use Cases
     @Provides
     fun provideAuthUseCases(repository: IAuthRepository): AuthUseCases =
-            AuthUseCases(
-                registerUser = RegisterUser(repository),
-                getUser = GetUser(repository),
-                loginUser = LoginUser(repository)
-            )
+        AuthUseCases(
+            registerUser = com.undefined.hydron.domain.useCases.auth.RegisterUser(repository),
+            getUser = com.undefined.hydron.domain.useCases.auth.GetUser(repository),
+            loginUser = com.undefined.hydron.domain.useCases.auth.LoginUser(repository)
+        )
 
+    // Wear Message DAO
     @Provides
     fun provideWearMessageDao(room: SensorDataUseCases): IWearMessageDao {
         return WearMessageDaoImpl(room)
     }
 
-
     @Provides
     fun provideHandleWearMessage(dao: IWearMessageDao): HandleWearMessage = HandleWearMessage(dao)
 
+    // Weather Use Cases
     @Provides
-    fun provideWeatherRepository(api: IWeatherApi): IWeather = WeatherImpl(api)
-
-
-    @Provides
-    fun provideWeatherUseCases(
-        getCurrentWeather: GetCurrentWeather
-    ): WeatherUseCases {
+    fun provideWeatherUseCases(getCurrentWeather: GetCurrentWeather): WeatherUseCases {
         return WeatherUseCases(getCurrentWeather)
     }
 
-
-
     @Provides
     fun provideGetCurrentWeatherUseCase(
-        repository: IWeather
+        repository: com.undefined.hydron.domain.repository.interfaces.IWeather
     ): GetCurrentWeather {
         return GetCurrentWeather(repository)
     }
 
+    // Firebase Database
+    @Provides
+    @Singleton
+    fun provideFirebaseDatabase(): FirebaseDatabase {
+        return FirebaseDatabase.getInstance()
+    }
+
+    // Data Transfer Service
     @Provides
     @Singleton
     fun provideDataTransferService(
@@ -166,31 +157,99 @@ object AppModule {
         authUseCases: AuthUseCases,
         firebaseAuth: FirebaseAuth
     ): DataTransferService {
-//        val firebaseUser = firebaseAuth.currentUser
-//            ?: throw IllegalStateException("FirebaseUser is not authenticated")
-
         return DataTransferService(
             sensorDataUseCases,
             firebaseDatabase,
-//            firebaseUser
-        )
+            firebaseAuth
+            )
     }
 
-    @Provides
-    @Singleton
-    fun provideFirebaseDatabase(): FirebaseDatabase {
-        return FirebaseDatabase.getInstance()
-    }
-
+    // Wearable Clients
     @Provides
     @Singleton
     fun provideDataClient(@ApplicationContext context: Context): DataClient {
         return Wearable.getDataClient(context)
     }
 
+    @Provides
+    @Singleton
+    fun provideMessageClient(@ApplicationContext context: Context): MessageClient =
+        Wearable.getMessageClient(context)
 
+    // Location Client
+    @Provides
+    @Singleton
+    fun provideLocationClient(@ApplicationContext context: Context): FusedLocationProviderClient =
+        LocationServices.getFusedLocationProviderClient(context)
 
+    // BindData Use Cases
+    @Provides
+    @Singleton
+    fun provideBindDataUseCases(repository: IBindDataRepository): BindDataUseCases =
+        BindDataUseCases(bindData = BindData(repository))
 
+    // Risk Analyzer
+    @Provides
+    @Singleton
+    fun provideRiskAnalyzer(): RiskAnalyzer = RiskAnalyzer()
 
+    // Payload Provider
+    @Provides
+    @Singleton
+    fun providePayloadProvider(
+        fusedLocationClient: FusedLocationProviderClient,
+        @ApplicationContext context: Context,
+        auth: FirebaseAuth,
+        dataStoreUseCases: DataStoreUseCases
+    ): PayloadProvider = PayloadProvider(fusedLocationClient, context, auth, dataStoreUseCases)
+
+    // Centralized Data Sync Manager
+    @Provides
+    @Singleton
+    fun provideCentralizedDataSyncManager(
+        dataStoreUseCases: DataStoreUseCases,
+        sensorDataUseCases: SensorDataUseCases,
+        riskAnalyzer: RiskAnalyzer,
+        bindDataUseCases: BindDataUseCases,
+        locationProvider: ILocationProvider
+    ): OrchestratorDataSyncManager = OrchestratorDataSyncManager(
+        dataStoreUseCases = dataStoreUseCases,
+        sensorDataUseCases = sensorDataUseCases,
+        riskAnalyzer = riskAnalyzer,
+        bindDataUseCases = bindDataUseCases,
+        locationProvider = locationProvider
+    )
+
+    // Tracker Manager
+    @Provides
+    @Singleton
+    fun provideTrackerManager(
+        dataStoreUseCases: DataStoreUseCases,
+        centralizedDataSync: OrchestratorDataSyncManager,
+        payloadProvider: PayloadProvider,
+        sensorDataUseCases: SensorDataUseCases
+    ): ITrackerManager = TrackerManager(
+        dataStoreUseCases,
+        centralizedDataSync,
+        payloadProvider,
+        sensorDataUseCases
+    )
+
+    // Tracking Controller
+    @Provides
+    @Singleton
+    fun provideTrackingController(
+        @ApplicationContext appContext: Context,
+        dataStoreUseCases: DataStoreUseCases,
+        trackerManager: ITrackerManager,
+        centralizedDataSync: OrchestratorDataSyncManager,
+        dataClient: DataClient
+    ): ITrackingController = TrackingController(
+        appContext,
+        dataStoreUseCases,
+        trackerManager,
+        centralizedDataSync,
+        dataClient
+
+    )
 }
-

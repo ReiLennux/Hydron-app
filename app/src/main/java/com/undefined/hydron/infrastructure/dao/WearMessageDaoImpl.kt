@@ -19,7 +19,7 @@ class WearMessageDaoImpl @Inject constructor(
                     println("BPM: $payload")
                     _room.addSensorData(SensorData(
                         sensorType = SensorType.HEART_RATE,
-                        value = payload.toFloat()
+                        value = payload.toDouble()
                     ))
             }
             else -> {

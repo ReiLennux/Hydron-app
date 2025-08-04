@@ -44,15 +44,15 @@ fun AppLogo(
     val isMonitoring by sharedViewModel.isMonitoring.collectAsState()
 
     val carouselMessages = listOf(
-       R.string.val_carrousel_message_1.toString(),
-        R.string.val_carrousel_message_2.toString()
+        stringResource(R.string.val_carrousel_message_1),
+        stringResource(R.string.val_carrousel_message_2)
     )
 
     var currentMessageIndex by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(isMonitoring) {
         if (!isMonitoring) {
-            while (true) {
+            while (!isMonitoring) {
                 delay(4000)
                 currentMessageIndex = (currentMessageIndex + 1) % carouselMessages.size
             }
@@ -66,7 +66,7 @@ fun AppLogo(
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() }
             ) {
-                sharedViewModel.setMonitoring(!isMonitoring)
+                sharedViewModel.toggleMonitoring()
             },
         verticalAlignment = Alignment.CenterVertically
     ) {

@@ -10,17 +10,14 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ISensorDataDao {
 
-
     @Query("SELECT * FROM sensor_data WHERE sensorType = :type AND value != 0 ORDER BY takenAt ASC")
-    fun  getSensorDataByTypeFlow(type: String): Flow<List<SensorData>>
+    fun getSensorDataByTypeFlow(type: String): Flow<List<SensorData>>
 
     @Insert
     suspend fun insert(sensorData: SensorData)
 
     @Delete
     suspend fun delete(sensorData: SensorData)
-
-    //db Batch
 
     @Query("SELECT COUNT(*) FROM sensor_data")
     suspend fun getTotalCount(): Int
@@ -34,4 +31,18 @@ interface ISensorDataDao {
     @Query("UPDATE sensor_data SET isUploaded = 1 WHERE id IN (:ids)")
     suspend fun markAsUploaded(ids: List<Int>)
 
+    @Query("SELECT * FROM sensor_data WHERE takenAt >= :sinceTimestamp ORDER BY takenAt DESC")
+    suspend fun getRecentSensorData(sinceTimestamp: Long): List<SensorData>
+
+    @Query("SELECT * FROM sensor_data WHERE isUploaded = 0 ORDER BY takenAt ASC")
+    suspend fun getPendingSensorData(): List<SensorData>
+
+    @Query("UPDATE sensor_data SET isUploaded = 1 WHERE id IN (:ids)")
+    suspend fun markAsSent(ids: List<Long>)
+
+    @Query("SELECT * FROM sensor_data WHERE takenAt >= :startTime AND takenAt <= :endTime ORDER BY takenAt ASC")
+    suspend fun getSensorDataInTimeRange(startTime: Long, endTime: Long): List<SensorData>
+
+    @Query("SELECT DISTINCT sensorType FROM sensor_data WHERE takenAt >= :sinceTimestamp")
+    suspend fun getActiveSensorTypes(sinceTimestamp: Long): List<String>
 }
