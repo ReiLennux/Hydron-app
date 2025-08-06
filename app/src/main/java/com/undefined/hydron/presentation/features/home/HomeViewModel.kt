@@ -84,6 +84,18 @@ class HomeViewModel @Inject constructor(
 
                         )
                 )
+                sensorDataUseCases.addSensorData(
+                    sensorData = SensorData(
+                        sensorType = SensorType.TEMPERATURE,
+                        value = (28..30).random().toDouble(),
+                    )
+                )
+                sensorDataUseCases.addSensorData(
+                    sensorData = SensorData(
+                        sensorType = SensorType.STEP_COUNT,
+                        value = (0..1).random().toDouble(),
+                    )
+                )
             }
             delay(10_000L)
         }

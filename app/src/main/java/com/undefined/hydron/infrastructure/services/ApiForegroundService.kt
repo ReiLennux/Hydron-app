@@ -26,8 +26,8 @@ class ApiForegroundService : Service(), DataClient.OnDataChangedListener {
     @Inject lateinit var trackingController: ITrackingController
     @Inject lateinit var messageClient: MessageClient
 
-    private val serviceJob = SupervisorJob()
-    private val serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
+    private var serviceJob = SupervisorJob()
+    private var serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
 
     companion object {
         const val ACTION_START_TRACKING = "START_TRACKING"
@@ -37,10 +37,11 @@ class ApiForegroundService : Service(), DataClient.OnDataChangedListener {
         const val CHANNEL_ID = "api_channel"
     }
 
+    private var isStopping = false
+
     private val dismissReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == ACTION_NOTIFICATION_DISMISSED) {
-                // Solo recrear la notificación si el servicio sigue activo
                 try {
                     val notification = createNotification()
                     val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
@@ -64,23 +65,32 @@ class ApiForegroundService : Service(), DataClient.OnDataChangedListener {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // ✅ Recrear scope si está cancelado
+        if (!serviceScope.isActive) {
+            serviceJob = SupervisorJob()
+            serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
+        }
+
         when (intent?.action) {
             ACTION_START_TRACKING, ACTION_NOTIFICATION_DISMISSED -> {
                 val notification = createNotification()
                 startForeground(NOTIFICATION_ID, notification)
-                // Nada más: tracking ya debería estar controlado desde ViewModel/controller
             }
 
             ACTION_STOP_TRACKING -> {
-                serviceScope.launch {
-                    try {
-                        trackingController.toggleTracking(false, this)
-                        sendStopTrackingToWearable()
-                    } catch (e: Exception) {
-                        Log.e("ApiForegroundService", "Error deteniendo tracking: ${e.message}")
-                    } finally {
-                        stopForeground(Service.STOP_FOREGROUND_REMOVE)
-                        stopSelf()
+                if (!isStopping) {
+                    isStopping = true
+                    serviceScope.launch {
+                        try {
+                            trackingController.toggleTracking(false, this)
+                            sendStopTrackingToWearable()
+                        } catch (e: Exception) {
+                            Log.e("ApiForegroundService", "Error deteniendo tracking: ${e.message}")
+                        } finally {
+                            stopForeground(STOP_FOREGROUND_REMOVE)
+                            stopSelf()
+                            isStopping = false
+                        }
                     }
                 }
             }
@@ -119,7 +129,7 @@ class ApiForegroundService : Service(), DataClient.OnDataChangedListener {
             .setOngoing(true)
             .setAutoCancel(false)
             .setOnlyAlertOnce(true)
-            .setPriority(NotificationCompat.PRIORITY_HIGH) // Cambié de MAX a HIGH
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setDeleteIntent(deleteIntent)
@@ -150,8 +160,6 @@ class ApiForegroundService : Service(), DataClient.OnDataChangedListener {
             if (event.type == DataEvent.TYPE_CHANGED) {
                 val path = event.dataItem.uri.path
                 if (path != null && path.startsWith("/your_wear_path")) {
-                    val dataMap = DataMapItem.fromDataItem(event.dataItem).dataMap
-
                     serviceScope.launch {
                         try {
                             // Procesar datos del wearable

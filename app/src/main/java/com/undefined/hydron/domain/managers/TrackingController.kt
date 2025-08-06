@@ -61,5 +61,5 @@ class TrackingController @Inject constructor(
         return dataStoreUseCases.getDataBooleanFlow(KEY_IS_MONITORING_TOGGLE)
     }
 
-    override suspend fun performBatchUpload() = centralizedDataSync.performBatchUpload()
+    //override suspend fun performBatchUpload() = centralizedDataSync.performBatchUpload()
 }

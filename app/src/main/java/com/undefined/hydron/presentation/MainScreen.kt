@@ -66,7 +66,6 @@ fun MainScreen(
                 navController = navController,
                 startDestination = Routes.HOME.name
             ) {
-
                 mainRoutes(navController = navController)
             }
         }

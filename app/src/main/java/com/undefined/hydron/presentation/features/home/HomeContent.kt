@@ -282,7 +282,7 @@ fun SystemControlCard(
 
                 Column {
                     Text(
-                        text = "Sistema Hydron",
+                        text = "Monitoreo Activo",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = if (isMonitoring)

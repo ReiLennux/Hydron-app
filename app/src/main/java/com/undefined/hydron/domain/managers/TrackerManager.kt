@@ -45,7 +45,6 @@ class TrackerManager @Inject constructor (
                         if (recentSensorData.isNotEmpty()) {
                             val sensorMap = recentSensorData.associateBy { it.id.toString() }
 
-                            // El CentralizedDataSyncManager decide si enviar o no
                             centralizedDataSync.processSensorData(sensorMap, currentLocation)
                         }
 
