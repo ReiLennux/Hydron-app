@@ -23,10 +23,12 @@ class TrackerManager @Inject constructor (
         trackingJob?.cancel()
         trackingJob = scope.launch {
             try {
+                val userInfo = payloadProvider.getUserInfo()
+
+
                 // 1. Iniciar sesión si no existe
                 val hasActiveSession = dataStoreUseCases.getDataString("current_session_id").isNotEmpty()
                 if (!hasActiveSession) {
-                    val userInfo = payloadProvider.getUserInfo()
                     val initialLocation = payloadProvider.getCurrentLocation()
                     centralizedDataSync.startMonitoringSession(userInfo, initialLocation)
                 }
@@ -45,7 +47,7 @@ class TrackerManager @Inject constructor (
                         if (recentSensorData.isNotEmpty()) {
                             val sensorMap = recentSensorData.associateBy { it.id.toString() }
 
-                            centralizedDataSync.processSensorData(sensorMap, currentLocation)
+                            centralizedDataSync.processSensorData(userInfo,sensorMap, currentLocation)
                         }
 
                     } catch (e: Exception) {

@@ -7,13 +7,8 @@ data class TrackingPayload(
     val location: Location? = null,
     val sensorData: Map<String, SensorData>? = null,
     val userInfo: UserInfo? = null,
-    val riskLevel: Int? = null,
-    val hydrationStatus: HydrationStatus? = null
+    val riskLevel: Double? = null,
 )
-
-enum class HydrationStatus {
-    LOW, MEDIUM, HIGH
-}
 
 
 
@@ -44,14 +39,6 @@ fun TrackingPayload.toFirebaseMap(): Map<String, Any> = buildMap {
     sensorData?.takeIf { it.isNotEmpty() }?.let { sensors ->
         val mapped = sensors.mapValues { it.value.toFirebaseMap() }
         put("sensorData", mapped)
-    }
-
-    hydrationStatus?.let {
-        put("hydrationStatus", it.name) // guardado como string: "LOW", "MEDIUM", etc.
-    }
-
-    riskLevel?.let {
-        put("riskLevel", it)
     }
 
     userInfo?.let {

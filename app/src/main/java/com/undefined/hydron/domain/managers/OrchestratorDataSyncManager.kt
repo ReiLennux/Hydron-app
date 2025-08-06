@@ -78,22 +78,32 @@ class OrchestratorDataSyncManager @Inject constructor (
 
 
     // 3. ANÁLISIS DE RIESGO - Solo enviar si hay riesgo detectado
-    suspend fun processSensorData(sensorData: Map<String, SensorData>, location: Location) {
+    suspend fun processSensorData(userInfo: UserInfo, sensorData: Map<String, SensorData>, location: Location) {
         val uid = getCurrentUid() ?: return
 
         saveSensorDataToRoom(sensorData)
 
-        val (age, conditions) = getUserProfileData()
+        val conditions = getUserProfileData()
 
         val riskAnalysis = riskAnalyzer.analyzeDehydrationRisk(
             sensorData = sensorData,
-            age = age,
+            age = userInfo.age,
             conditions = conditions
         )
 
         if (riskAnalysis.hasRisk) {
+
+            val usrInfo = UserInfo(
+                userId = uid,
+                userName = userInfo.userName,
+                isActive = true,
+                age = userInfo.age,
+                riskLevel = riskAnalysis.riskLevel,
+                gender = userInfo.gender
+            )
+
             val riskPayload = TrackingPayload(
-                userInfo = null,
+                userInfo = usrInfo,
                 location = location,
                 sensorData = sensorData
             )
@@ -114,19 +124,12 @@ class OrchestratorDataSyncManager @Inject constructor (
     // 4. ALERTA DE EMERGENCIA
     private suspend fun sendEmergencyAlert(uid: String, risk: RiskAnalysis, location: Location) {
         try {
-            // Determinar el estado de hidratación basado en el riesgo
-            val hydrationStatus = when {
-                risk.riskLevel >= 0.7 -> HydrationStatus.LOW
-                risk.riskLevel >= 0.4 -> HydrationStatus.MEDIUM
-                else -> HydrationStatus.HIGH
-            }
 
             val emergencyPayload = TrackingPayload(
                 location = location,
                 sensorData = null,
                 userInfo = null,
-                riskLevel = (risk.riskLevel * 100).toInt(), // Convertir a entero (0-100)
-                hydrationStatus = hydrationStatus
+                riskLevel = risk.riskLevel,
             )
 
             val response = bindDataUseCases.bindData(emergencyPayload)
@@ -191,8 +194,7 @@ class OrchestratorDataSyncManager @Inject constructor (
         return FirebaseAuth.getInstance().currentUser?.uid
     }
 
-    private suspend fun getUserProfileData(): Pair<Int, List<String>> {
-        val edad = dataStoreUseCases.getDataInt(Constants.USER_AGE)
+    private suspend fun getUserProfileData(): List<String> {
 
         val condiciones = mutableListOf<String>()
 
@@ -211,7 +213,7 @@ class OrchestratorDataSyncManager @Inject constructor (
             condiciones.addAll(enfermedadesCronicas.split(",").map { it.trim().lowercase() })
         }
 
-        return Pair(edad, condiciones)
+        return condiciones
     }
 
 

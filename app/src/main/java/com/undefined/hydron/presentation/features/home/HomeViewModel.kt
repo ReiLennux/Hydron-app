@@ -74,7 +74,7 @@ class HomeViewModel @Inject constructor(
 
     private suspend fun simulateData(){
         while (true){
-            val randomHeartRate = (60..140).random()
+            val randomHeartRate = (101..140).random()
             viewModelScope.launch {
                 sensorDataUseCases.addSensorData(
                     sensorData = SensorData(
@@ -87,7 +87,7 @@ class HomeViewModel @Inject constructor(
                 sensorDataUseCases.addSensorData(
                     sensorData = SensorData(
                         sensorType = SensorType.TEMPERATURE,
-                        value = (28..30).random().toDouble(),
+                        value = (38..49).random().toDouble(),
                     )
                 )
                 sensorDataUseCases.addSensorData(

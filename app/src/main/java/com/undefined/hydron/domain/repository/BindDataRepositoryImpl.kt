@@ -18,10 +18,8 @@ class BindDataRepositoryImpl : IBindDataRepository {
 
             val userRef = database.child("realtime_tracking").child(uid)
 
-            // Convertimos todo el payload a un mapa Firebase-friendly
             val dataMap = payload.toFirebaseMap()
 
-            // Subimos todo de una sola vez
             userRef.updateChildren(dataMap).await()
 
             Response.Success(true)

@@ -65,7 +65,6 @@ class ApiForegroundService : Service(), DataClient.OnDataChangedListener {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // ✅ Recrear scope si está cancelado
         if (!serviceScope.isActive) {
             serviceJob = SupervisorJob()
             serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
