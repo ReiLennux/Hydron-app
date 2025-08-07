@@ -8,7 +8,6 @@ import com.google.android.gms.wearable.DataClient
 import com.google.android.gms.wearable.MessageClient
 import com.google.android.gms.wearable.Wearable
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.FirebaseDatabase
 import com.undefined.hydron.domain.interfaces.ILocationProvider
 import com.undefined.hydron.domain.interfaces.ITrackerManager
@@ -41,7 +40,6 @@ import com.undefined.hydron.domain.useCases.room.tasks.TaskRoomUseCases
 import com.undefined.hydron.domain.useCases.wear.HandleWearMessage
 import com.undefined.hydron.domain.useCases.weather.GetCurrentWeather
 import com.undefined.hydron.domain.useCases.weather.WeatherUseCases
-import com.undefined.hydron.infrastructure.dao.WearMessageDaoImpl
 import com.undefined.hydron.infrastructure.db.MainDatabase
 import com.undefined.hydron.infrastructure.services.DataTransferService
 import dagger.Module
@@ -118,12 +116,6 @@ object AppModule {
             loginUser = com.undefined.hydron.domain.useCases.auth.LoginUser(repository)
         )
 
-    // Wear Message DAO
-    @Provides
-    fun provideWearMessageDao(room: SensorDataUseCases): IWearMessageDao {
-        return WearMessageDaoImpl(room)
-    }
-
     @Provides
     fun provideHandleWearMessage(dao: IWearMessageDao): HandleWearMessage = HandleWearMessage(dao)
 
@@ -153,8 +145,6 @@ object AppModule {
     fun provideDataTransferService(
         sensorDataUseCases: SensorDataUseCases,
         firebaseDatabase: FirebaseDatabase,
-        dataStoreUseCases: DataStoreUseCases,
-        authUseCases: AuthUseCases,
         firebaseAuth: FirebaseAuth
     ): DataTransferService {
         return DataTransferService(
@@ -208,13 +198,11 @@ object AppModule {
     @Singleton
     fun provideCentralizedDataSyncManager(
         dataStoreUseCases: DataStoreUseCases,
-        sensorDataUseCases: SensorDataUseCases,
         riskAnalyzer: RiskAnalyzer,
         bindDataUseCases: BindDataUseCases,
         locationProvider: ILocationProvider
     ): OrchestratorDataSyncManager = OrchestratorDataSyncManager(
         dataStoreUseCases = dataStoreUseCases,
-        sensorDataUseCases = sensorDataUseCases,
         riskAnalyzer = riskAnalyzer,
         bindDataUseCases = bindDataUseCases,
         locationProvider = locationProvider

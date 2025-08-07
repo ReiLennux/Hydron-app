@@ -26,6 +26,7 @@ class WearDataListenerService : WearableListenerService() {
     }
 
     override fun onMessageReceived(messageEvent: MessageEvent) {
+        Log.d("DATA_RECIVED", "Mensaje recibido: $messageEvent")
         if (messageEvent.path == "/sensor_data") {
             val payload = String(messageEvent.data, Charsets.UTF_8)
             Log.d("DATA_RECIVED", "Mensaje recibido: $payload")

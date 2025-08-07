@@ -19,7 +19,6 @@ import javax.inject.Inject
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val sensorDataUseCases: SensorDataUseCases,
-    private val weatherUseCases: WeatherUseCases
 ): ViewModel(){
 
 
@@ -62,7 +61,6 @@ class DashboardViewModel @Inject constructor(
     fun getTasks(){
         viewModelScope.launch {
             sensorDataUseCases.getSensorDataByType(SensorType.HEART_RATE).collect {
-                println(it)
                 _registers.value = it
             }
         }

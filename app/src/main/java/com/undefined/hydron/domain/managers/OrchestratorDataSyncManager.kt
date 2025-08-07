@@ -9,7 +9,6 @@ import com.undefined.hydron.domain.models.*
 import com.undefined.hydron.domain.models.entities.SensorData
 import com.undefined.hydron.domain.useCases.bindData.BindDataUseCases
 import com.undefined.hydron.domain.useCases.dataStore.DataStoreUseCases
-import com.undefined.hydron.domain.useCases.room.sensors.SensorDataUseCases
 import kotlinx.coroutines.*
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -17,14 +16,14 @@ import javax.inject.Singleton
 @Singleton
 class OrchestratorDataSyncManager @Inject constructor (
     private val dataStoreUseCases: DataStoreUseCases,
-    private val sensorDataUseCases: SensorDataUseCases,
     private val riskAnalyzer: RiskAnalyzer,
     private val bindDataUseCases: BindDataUseCases,
     private val locationProvider: ILocationProvider
-
 ) {
 
     private var locationSyncJob: Job? = null
+    private var lastRiskLevel: Double = 0.0
+    private var lastRiskSentTime: Long = 0L
 
     companion object {
         private const val TAG = "DataSyncManager"
@@ -32,8 +31,10 @@ class OrchestratorDataSyncManager @Inject constructor (
 
     // 1. INICIO DE SESIÓN - Envío inmediato de UserInfo
     suspend fun startMonitoringSession(userInfo: UserInfo, initialLocation: Location) {
+        Log.d(TAG, "=== INICIANDO SESIÓN DE MONITOREO ===")
+
         val initialPayload = TrackingPayload(
-            userInfo = userInfo,
+            userInfo = userInfo.copy(isActive = true, riskLevel = 0.0),
             location = initialLocation,
             sensorData = null
         )
@@ -41,180 +42,221 @@ class OrchestratorDataSyncManager @Inject constructor (
         startLocationTracking()
 
         val response = bindDataUseCases.bindData(initialPayload)
-        if (response is Response.Success) {
-            Log.d(TAG, "Sesión iniciada correctamente")
-        } else if (response is Response.Error) {
-            Log.e(TAG, "Error iniciando sesión: ${response.exception?.message}")
+        when (response) {
+            is Response.Success -> {
+                Log.d(TAG, "Sesión iniciada correctamente para usuario: ${userInfo.userId}")
+                lastRiskLevel = 0.0
+                lastRiskSentTime = System.currentTimeMillis()
+            }
+            is Response.Error -> {
+                Log.e(TAG, "Error iniciando sesión: ${response.exception?.message}")
+            }
+
+            Response.Idle -> {}
+            Response.Loading -> {}
         }
     }
 
-
-    // 2. ENVÍO PERIÓDICO DE UBICACIÓN (cada 5 minutos)
+    // 2. ENVÍO PERIÓDICO DE UBICACIÓN (cada 5 minutos o por movimiento significativo)
     private fun startLocationTracking() {
-        locationProvider.startLocationUpdates(minDistanceMeters = 5f) { newLocation ->
+        locationProvider.startLocationUpdates(minDistanceMeters = 10f) { newLocation ->
             CoroutineScope(Dispatchers.IO).launch {
                 try {
-                    val payload = TrackingPayload(
-                        userInfo = null,
-                        location = newLocation,
-                        sensorData = null
-                    )
-                    val response = bindDataUseCases.bindData(payload)
-                    if (response is Response.Success) {
-                        Log.d(TAG, "Ubicación enviada por movimiento")
-                    } else if (response is Response.Error) {
-                        Log.e(TAG, "Error al enviar ubicación: ${response.exception?.message}")
-                    }
+                    sendLocationUpdate(newLocation)
                 } catch (e: Exception) {
-                    Log.e(TAG, "Error tracking ubicación: ${e.message}")
+                    Log.e(TAG, "Error en tracking de ubicación: ${e.message}")
                 }
             }
         }
     }
 
-    private fun stopLocationTracking() {
-        locationProvider.stopLocationUpdates()
-    }
-
-
-    // 3. ANÁLISIS DE RIESGO - Solo enviar si hay riesgo detectado
-    suspend fun processSensorData(userInfo: UserInfo, sensorData: Map<String, SensorData>, location: Location) {
-        val uid = getCurrentUid() ?: return
-
-        saveSensorDataToRoom(sensorData)
-
-        val conditions = getUserProfileData()
-
-        val riskAnalysis = riskAnalyzer.analyzeDehydrationRisk(
-            sensorData = sensorData,
-            age = userInfo.age,
-            conditions = conditions
+    private suspend fun sendLocationUpdate(location: Location) {
+        val payload = TrackingPayload(
+            userInfo = null,
+            location = location,
+            sensorData = null
         )
 
-        if (riskAnalysis.hasRisk) {
-
-            val usrInfo = UserInfo(
-                userId = uid,
-                userName = userInfo.userName,
-                isActive = true,
-                age = userInfo.age,
-                riskLevel = riskAnalysis.riskLevel,
-                gender = userInfo.gender
-            )
-
-            val riskPayload = TrackingPayload(
-                userInfo = usrInfo,
-                location = location,
-                sensorData = sensorData
-            )
-
-            val response = bindDataUseCases.bindData(riskPayload)
-            if (response is Response.Error) {
-                Log.e(TAG, "Error enviando datos de riesgo: ${response.exception?.message}")
+        val response = bindDataUseCases.bindData(payload)
+        when (response) {
+            is Response.Success -> {
+                Log.d(TAG, "Ubicación enviada: lat=${location.latitude}, lon=${location.longitude}")
+            }
+            is Response.Error -> {
+                Log.w(TAG, "Error al enviar ubicación: ${response.exception?.message}")
             }
 
-            if (riskAnalysis.riskLevel >= 0.7) {
-                sendEmergencyAlert(uid, riskAnalysis, location)
-            }
+            Response.Idle -> {}
+            Response.Loading -> {}
         }
     }
 
+    private fun stopLocationTracking() {
+        locationProvider.stopLocationUpdates()
+        Log.d(TAG, "Tracking de ubicación detenido")
+    }
 
+    // 3. ANÁLISIS Y PROCESAMIENTO DE DATOS DE SENSORES
+    suspend fun processSensorData(userInfo: UserInfo, sensorData: List<SensorData>, location: Location) {
+        val uid = getCurrentUid() ?: return
+
+        try {
+
+            val conditions = getUserProfileData()
+
+            val riskAnalysis = riskAnalyzer.analyzeDehydrationRisk(sensorData, userInfo.age, conditions)
+
+                sendRiskData(userInfo, sensorData, location, riskAnalysis, uid)
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Error procesando datos de sensores: ${e.message}")
+        }
+    }
+
+    private suspend fun sendRiskData(
+        userInfo: UserInfo,
+        sensorData: List<SensorData>,
+        location: Location,
+        riskAnalysis: RiskAnalysis,
+        uid: String
+    ) {
+        try {
+            val updatedUserInfo = userInfo.copy(
+                userId = uid,
+                isActive = true,
+                riskLevel = riskAnalysis.riskLevel
+            )
+
+            val sensorMap = sensorData.associateBy { it.id.toString() }
+
+
+            val riskPayload = TrackingPayload(
+                userInfo = updatedUserInfo,
+                location = location,
+                sensorData = sensorMap
+            )
+
+            val response = bindDataUseCases.bindData(riskPayload)
+            when (response) {
+                is Response.Success -> {
+                    Log.d(TAG, "Datos de riesgo enviados exitosamente - Nivel: ${riskAnalysis.riskLevel}")
+
+                }
+                is Response.Error -> {
+                    Log.e(TAG, "Error enviando datos de riesgo: ${response.exception?.message}")
+                }
+
+                Response.Idle -> {}
+                Response.Loading -> {}
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error en sendRiskData: ${e.message}")
+        }
+    }
 
     // 4. ALERTA DE EMERGENCIA
     private suspend fun sendEmergencyAlert(uid: String, risk: RiskAnalysis, location: Location) {
         try {
 
             val emergencyPayload = TrackingPayload(
+                userInfo = UserInfo(
+                    userId = uid,
+                    isActive = true,
+                    riskLevel = risk.riskLevel
+                ),
                 location = location,
                 sensorData = null,
-                userInfo = null,
-                riskLevel = risk.riskLevel,
             )
 
             val response = bindDataUseCases.bindData(emergencyPayload)
-            if (response is Response.Success) {
-                Log.e(TAG, "ALERTA DE EMERGENCIA ENVIADA - Riesgo: ${risk.riskLevel}")
-            } else if (response is Response.Error) {
-                Log.e(TAG, "Error enviando alerta: ${response.exception?.message}")
-            }
 
         } catch (e: Exception) {
-            Log.e(TAG, "Error enviando alerta: ${e.message}")
+            Log.e(TAG, "Error crítico enviando alerta: ${e.message}")
         }
     }
 
-    // 6. FINALIZAR SESIÓN
+    // 5. FINALIZAR SESIÓN
     suspend fun endMonitoringSession() {
         try {
             val uid = getCurrentUid() ?: return
 
+            // Cancelar jobs activos
             locationSyncJob?.cancel()
-
             stopLocationTracking()
 
-            // Enviar solo isActive = false
+            // Enviar señal de fin de sesión
             val endSessionPayload = TrackingPayload(
                 userInfo = UserInfo(
                     userId = uid,
-                    isActive = false
-                )
+                    isActive = false,
+                    riskLevel = 0.0 // Reset del riesgo al finalizar
+                ),
+                location = null,
+                sensorData = null
             )
 
             val response = bindDataUseCases.bindData(endSessionPayload)
-            if (response is Response.Success) {
-                Log.d(TAG, "Sesión finalizada correctamente: $uid")
-            } else if (response is Response.Error) {
-                Log.e(TAG, "Error finalizando sesión: ${response.exception?.message}")
+            when (response) {
+                is Response.Success -> {
+                    Log.d(TAG, " Sesión finalizada correctamente para: $uid")
+                }
+                is Response.Error -> {
+                    Log.e(TAG, " Error finalizando sesión: ${response.exception?.message}")
+                }
+
+                Response.Idle -> {}
+                Response.Loading -> {}
             }
 
-            // Limpiar estado local
-            dataStoreUseCases.setDataBoolean(KEY_IS_MONITORING_TOGGLE, false)
+            resetLocalState()
 
         } catch (e: Exception) {
             Log.e(TAG, "Error finalizando sesión: ${e.message}")
         }
     }
 
-    // MÉTODOS AUXILIARES
-    private suspend fun saveSensorDataToRoom(sensorData: Map<String, SensorData>) {
-        try {
-            sensorData.values.forEach { sensor ->
-                sensorDataUseCases.addSensorData(sensor.copy(
-                    takenAt = System.currentTimeMillis(),
-                    isUploaded = false
-                ))
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error guardando en Room: ${e.message}")
-        }
+    //Handlers
+    private suspend fun resetLocalState() {
+        dataStoreUseCases.setDataBoolean(KEY_IS_MONITORING_TOGGLE, false)
+        lastRiskLevel = 0.0
+        lastRiskSentTime = 0L
+        Log.d(TAG, "Estado local limpiado")
     }
 
     private fun getCurrentUid(): String? {
-        return FirebaseAuth.getInstance().currentUser?.uid
+        return FirebaseAuth.getInstance().currentUser?.uid?.also {
+            Log.v(TAG, "Usuario actual: $it")
+        }
     }
 
     private suspend fun getUserProfileData(): List<String> {
-
         val condiciones = mutableListOf<String>()
 
-        if (dataStoreUseCases.getDataBoolean(Constants.USER_DIABETES)) {
-            condiciones.add("diabetes")
-        }
-        if (dataStoreUseCases.getDataBoolean(Constants.USER_HEART_DISEASE)) {
-            condiciones.add("cardiopatia")
-        }
-        if (dataStoreUseCases.getDataBoolean(Constants.USER_HYPERTENSION)) {
-            condiciones.add("hipertension")
-        }
+        try {
+            if (dataStoreUseCases.getDataBoolean(Constants.USER_DIABETES)) {
+                condiciones.add("diabetes")
+            }
+            if (dataStoreUseCases.getDataBoolean(Constants.USER_HEART_DISEASE)) {
+                condiciones.add("cardiopatia")
+            }
+            if (dataStoreUseCases.getDataBoolean(Constants.USER_HYPERTENSION)) {
+                condiciones.add("hipertension")
+            }
 
-        val enfermedadesCronicas = dataStoreUseCases.getDataString(Constants.USER_CHRONIC_DISEASE_DETAILS)
-        if (enfermedadesCronicas.isNotBlank()) {
-            condiciones.addAll(enfermedadesCronicas.split(",").map { it.trim().lowercase() })
+            val enfermedadesCronicas = dataStoreUseCases.getDataString(Constants.USER_CHRONIC_DISEASE_DETAILS)
+            if (enfermedadesCronicas.isNotBlank()) {
+                condiciones.addAll(
+                    enfermedadesCronicas.split(",")
+                        .map { it.trim().lowercase() }
+                        .filter { it.isNotBlank() }
+                )
+            }
+
+            Log.d(TAG, "📋 Condiciones del usuario: $condiciones")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error obteniendo perfil del usuario: ${e.message}")
         }
 
         return condiciones
     }
-
-
 }

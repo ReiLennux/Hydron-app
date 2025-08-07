@@ -3,89 +3,115 @@ package com.undefined.hydron.domain.managers
 import android.util.Log
 import com.undefined.hydron.domain.models.RiskAnalysis
 import com.undefined.hydron.domain.models.entities.SensorData
-import com.undefined.hydron.infrastructure.db.preloaded.ActividadFisicaDataSet
+import com.undefined.hydron.domain.models.entities.SensorType
 import com.undefined.hydron.infrastructure.db.preloaded.FrecuenciaCardiacaDataSet
 import com.undefined.hydron.infrastructure.db.preloaded.PresionArterialDataSet
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class RiskAnalyzer @Inject constructor(
-
-) {
+class RiskAnalyzer @Inject constructor() {
 
     fun analyzeDehydrationRisk(
-        sensorData: Map<String, SensorData>,
+        sensorData: List<SensorData>,
         age: Int?,
         conditions: List<String>
     ): RiskAnalysis {
         try {
-
             val issues = mutableListOf<String>()
             var riskScore = 0.0
 
-            val heartRate = sensorData["heart_rate"]?.value ?: 0.0
-            val skinTemp = sensorData["skin_temperature"]?.value ?: 0.0
-            val activityLevel = sensorData["activity_level"]?.value ?: 0.0
-            val systolic = sensorData["blood_pressure_systolic"]?.value ?: 0.0
-            val diastolic = sensorData["blood_pressure_diastolic"]?.value ?: 0.0
+            Log.d("RiskAnalyzer", "=== INICIO ANÁLISIS ===")
+            Log.d("RiskAnalyzer", "Edad: $age")
+            Log.d("RiskAnalyzer", "Condiciones: $conditions")
+            Log.d("RiskAnalyzer", "Datos sensores: ${sensorData.map { "${it.sensorType}=${it.value}" }}")
 
-            // Obtener perfil FC
-            val fcProfile = FrecuenciaCardiacaDataSet.find { age != null && age in it.edadMin..it.edadMax }
+            if (age == null) {
+                Log.w("RiskAnalyzer", "Edad no proporcionada, usando valores generales")
+                return RiskAnalysis(false, 0.0, "Datos insuficientes para análisis")
+            }
 
-            // Obtener perfil actividad física para condición principal (o "General")
-            val mainCondition = conditions.firstOrNull()?.capitalize() ?: "General"
-            val actividadProfile = ActividadFisicaDataSet.find { age != null && age in it.edadMin..it.edadMax && it.grupo == mainCondition }
-                ?: ActividadFisicaDataSet.find { age != null && age in it.edadMin..it.edadMax && it.grupo == "General" }
+            // Obtener perfiles
+            val fcProfile = FrecuenciaCardiacaDataSet.find { age in it.edadMin..it.edadMax }
 
-            // Obtener perfil presión arterial según condición y edad
             val estadoSalud = when {
-                conditions.any { it.contains("diabetes") } -> "Diabetes"
-                conditions.any { it.contains("erc") } -> "ERC"
-                conditions.any { it.contains("fq") } -> "FQ"
-                conditions.any { it.contains("hipertension") } -> "Crónica"
+                conditions.any { it.contains("diabetes", ignoreCase = true) } -> "Diabetes"
+                conditions.any { it.contains("erc", ignoreCase = true) } -> "ERC"
+                conditions.any { it.contains("fq", ignoreCase = true) } -> "FQ"
+                conditions.any { it.contains("hipertension", ignoreCase = true) } -> "Crónica"
                 else -> "Saludable"
             }
-            val presionProfile = PresionArterialDataSet.find { age != null && age in it.edadMin..it.edadMax && it.estadoSalud.equals(estadoSalud, ignoreCase = true) }
 
-            // 1. Analizar frecuencia cardíaca
-            val fcMax = fcProfile?.fcMax ?: 180
-            val fcReposoMax = fcProfile?.fcReposoMax ?: 100
-
-            if (heartRate > fcReposoMax) {
-                riskScore += 0.3
-                issues.add("Frecuencia cardíaca elevada")
+            val presionProfile = PresionArterialDataSet.find {
+                age in it.edadMin..it.edadMax && it.estadoSalud.equals(estadoSalud, ignoreCase = true)
             }
 
-            // 2. Analizar temperatura corporal
-            if (skinTemp > 37.5) {
-                riskScore += 0.4
-                issues.add("Temperatura corporal alta")
+            Log.d("RiskAnalyzer", "Perfiles encontrados - FC: ${fcProfile != null}, Presión: ${presionProfile != null}")
+            Log.d("RiskAnalyzer", "Estado salud detectado: $estadoSalud")
+
+            // Extraer últimos valores únicos de sensores simples
+            val heartRate = sensorData.lastOrNull { it.sensorType == SensorType.HEART_RATE }?.value
+            val skinTemp = sensorData.lastOrNull { it.sensorType == SensorType.TEMPERATURE }?.value
+
+            // Análisis de STEP_COUNT como series
+            val stepSeries = sensorData
+                .filter { it.sensorType == SensorType.STEP_COUNT }
+                .sortedBy { it.takenAt }
+
+            val stepDeltas = stepSeries.zipWithNext { a, b -> b.value - a.value }
+            val avgDelta = stepDeltas.takeIf { it.isNotEmpty() }?.average()
+
+            val inferredActivity = when {
+                avgDelta == null -> null
+                avgDelta < 1.0 -> "reposo"
+                avgDelta < 10.0 -> "caminar lento"
+                avgDelta < 30.0 -> "caminar normal"
+                else -> "actividad intensa"
             }
 
-            // 3. Comparar actividad física real vs recomendada
-            if (actividadProfile != null) {
-                val horasRecomendadas = actividadProfile.horasPorSemana
-                val horasReal = activityLevel * 14 // Ejemplo: si activityLevel es 0..1 y escalas a horas aprox semanales
-                if (horasReal < horasRecomendadas) {
-                    riskScore += 0.15
-                    issues.add("Actividad física menor a la recomendada para su condición")
+            if (inferredActivity != null) {
+                Log.d("RiskAnalyzer", "Actividad inferida por pasos: $inferredActivity (Δpromedio = ${avgDelta?.toInt()})")
+            }
+
+            // 1. FC
+            if (heartRate != null && heartRate > 0) {
+                val fcReposoMax = fcProfile?.fcReposoMax ?: 100
+                if (heartRate > fcReposoMax) {
+                    riskScore += 0.3
+                    issues.add("Frecuencia cardíaca elevada ($heartRate > $fcReposoMax)")
                 }
             }
 
-            // 4. Evaluar presión arterial
-            if (presionProfile != null) {
-                if (systolic < presionProfile.sistolicaMin || systolic > presionProfile.sistolicaMax) {
-                    riskScore += 0.2
-                    issues.add("Presión sistólica fuera de rango (${systolic.toInt()})")
-                }
-                if (diastolic < presionProfile.diastolicaMin || diastolic > presionProfile.diastolicaMax) {
-                    riskScore += 0.2
-                    issues.add("Presión diastólica fuera de rango (${diastolic.toInt()})")
+            // 2. Temperatura
+            if (skinTemp != null && skinTemp > 0) {
+                if (skinTemp > 37.5) {
+                    riskScore += 0.4
+                    issues.add("Temperatura corporal alta ($skinTemp°C)")
                 }
             }
 
-            // 5. Otras condiciones o sensores, sumar riesgo adicional si se requiere
+            // 3. Interpretar riesgo según actividad detectada
+            if (inferredActivity != null) {
+                when (inferredActivity) {
+                    "reposo" -> {
+                        if (skinTemp != null && skinTemp > 37.5) {
+                            riskScore += 0.2
+                            issues.add("Temperatura elevada en reposo")
+                        }
+                        if (heartRate != null && heartRate > (fcProfile?.fcReposoMax ?: 100)) {
+                            riskScore += 0.1
+                            issues.add("Frecuencia cardíaca elevada en reposo")
+                        }
+                    }
+
+                    "actividad intensa" -> {
+                        if (heartRate != null && heartRate > (fcProfile?.fcReposoMax ?: 100)) {
+                            riskScore += 0.2
+                            issues.add("Ejercicio intenso con FC alta")
+                        }
+                    }
+                }
+            }
 
             riskScore = riskScore.coerceIn(0.0, 1.0)
             val hasRisk = riskScore > 0.4
@@ -97,10 +123,9 @@ class RiskAnalyzer @Inject constructor(
                 recommendedActions = if (hasRisk) getRecommendations(riskScore) else emptyList()
             )
 
-
         } catch (e: Exception) {
-            Log.e("RiskAnalyzer", "Error analizando riesgo: ${e.message}")
-            return RiskAnalysis(false, 0.0, "Error en análisis")
+            Log.e("RiskAnalyzer", "Error analizando riesgo: ${e.message}", e)
+            return RiskAnalysis(false, 0.0, "Error en análisis: ${e.message}")
         }
     }
 
@@ -108,11 +133,21 @@ class RiskAnalyzer @Inject constructor(
         return when {
             riskScore > 0.8 -> listOf(
                 "Buscar sombra inmediatamente",
-                "Beber agua",
-                "Contactar emergencias"
+                "Beber agua abundante",
+                "Contactar servicios de emergencia",
+                "Suspender actividad física"
             )
-            riskScore > 0.6 -> listOf("Reducir actividad", "Hidratarse", "Buscar lugar fresco")
-            riskScore > 0.4 -> listOf("Beber agua", "Monitorear síntomas")
+            riskScore > 0.6 -> listOf(
+                "Reducir actividad física inmediatamente",
+                "Hidratarse frecuentemente",
+                "Buscar lugar fresco y ventilado",
+                "Monitorear síntomas constantemente"
+            )
+            riskScore > 0.4 -> listOf(
+                "Beber agua regularmente",
+                "Monitorear síntomas de deshidratación",
+                "Evitar exposición solar prolongada"
+            )
             else -> emptyList()
         }
     }

@@ -324,8 +324,14 @@ fun SystemControlCard(
 fun SensorStatusCard(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
-    val registers by viewModel.registers.observeAsState(emptyList())
-    val bpmList = registers.map { it.value }
+    val hearthRegisters by viewModel.hearthRateRegisters.observeAsState(emptyList())
+    val bpmList = hearthRegisters.map { it.value }
+
+    val temperatureRegisters by viewModel.temperatureRegisters.observeAsState(emptyList())
+    val temperatureList = temperatureRegisters.map { it.value }
+
+    val stepCountRegisters by viewModel.stepCountRegisters.observeAsState(emptyList())
+    val stepCountList = stepCountRegisters.map { it.value }
 
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
@@ -375,11 +381,11 @@ fun SensorStatusCard(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            if (bpmList.isNotEmpty()) {
-                HeartRateChart(bpmList = bpmList)
-
-                Spacer(modifier = Modifier.height(12.dp))
-
+            if (bpmList.isNotEmpty() && temperatureList.isNotEmpty() && stepCountList.isNotEmpty()) {
+                GenericChart(
+                    registerList = bpmList,
+                    label = "BPM"
+                )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -407,6 +413,75 @@ fun SensorStatusCard(
                         }
                     }
                 }
+                Spacer(modifier = Modifier.height(12.dp))
+                GenericChart(
+                    registerList = temperatureList,
+                    label = "Temperatura"
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Rango normal: 60-100 BPM",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    if (bpmList.last() > 100 || bpmList.last() < 60) {
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer,
+                                contentColor = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        ) {
+                            Text(
+                                text = if (bpmList.last() > 100) "Elevado" else "Bajo",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+                GenericChart(
+                    registerList = stepCountList,
+                    label = "Pasos"
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Rango normal: 60-100 BPM",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    if (bpmList.last() > 100 || bpmList.last() < 60) {
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer,
+                                contentColor = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        ) {
+                            Text(
+                                text = if (bpmList.last() > 100) "Elevado" else "Bajo",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+
             } else {
                 NoSensorDataMessage()
             }
@@ -415,7 +490,10 @@ fun SensorStatusCard(
 }
 
 @Composable
-fun HeartRateChart(bpmList: List<Double>) {
+fun GenericChart(
+    registerList: List<Double>,
+    label: String
+) {
     val primary = MaterialTheme.colorScheme.primary
 
     LineChart(
@@ -429,8 +507,8 @@ fun HeartRateChart(bpmList: List<Double>) {
             .padding(12.dp),
         data = listOf(
             Line(
-                label = "BPM",
-                values = bpmList,
+                label = label,
+                values = registerList,
                 color = SolidColor(primary),
                 firstGradientFillColor = primary.copy(alpha = 0.3f),
                 secondGradientFillColor = Color.Transparent,
@@ -761,7 +839,6 @@ fun Context.hasPermission(permission: String): Boolean {
     return ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
 }
 //endregion
-
 
 //region Batch Temporal
 @Composable

@@ -44,7 +44,6 @@ class PlaceHolderViewModel @Inject constructor(
 
 
     fun startTransfer() {
-        println("startTransfer")
         _transferState.value = TransferState.Loading(0)
 
         transferService.startDataTransfer { result ->
@@ -67,7 +66,6 @@ class PlaceHolderViewModel @Inject constructor(
             }
         }
 
-        println("endTransfer")
     }
 
     fun cancelTransfer() {

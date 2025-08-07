@@ -45,9 +45,8 @@ class TrackerManager @Inject constructor (
                         )
 
                         if (recentSensorData.isNotEmpty()) {
-                            val sensorMap = recentSensorData.associateBy { it.id.toString() }
 
-                            centralizedDataSync.processSensorData(userInfo,sensorMap, currentLocation)
+                            centralizedDataSync.processSensorData(userInfo,recentSensorData, currentLocation)
                         }
 
                     } catch (e: Exception) {

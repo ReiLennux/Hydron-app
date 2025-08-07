@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
         PresionArterial::class,
         ActividadFisica::class
     ],
-    version = 15,
+    version = 16,
     exportSchema = false
 )
 abstract class MainDatabase : RoomDatabase() {

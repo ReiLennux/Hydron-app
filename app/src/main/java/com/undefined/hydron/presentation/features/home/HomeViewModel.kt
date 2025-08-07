@@ -39,8 +39,15 @@ class HomeViewModel @Inject constructor(
     val isLoading: MutableStateFlow<Response<WeatherModel>?> = _isLoading
     // endregion
 
-    private val _registers = MutableLiveData<List<SensorData>>()
-    val registers: LiveData<List<SensorData>> = _registers
+    private val _hearthRateRegisters = MutableLiveData<List<SensorData>>()
+    val hearthRateRegisters: LiveData<List<SensorData>> = _hearthRateRegisters
+
+    private val _temperatureRegisters = MutableLiveData<List<SensorData>>()
+    val temperatureRegisters: LiveData<List<SensorData>> = _temperatureRegisters
+
+    private val _stepCountRegisters = MutableLiveData<List<SensorData>>()
+    val stepCountRegisters: LiveData<List<SensorData>> = _stepCountRegisters
+
 
     private val _weather = MutableLiveData<WeatherModel?>()
     val weather: LiveData<WeatherModel?> = _weather
@@ -72,35 +79,43 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private suspend fun simulateData(){
-        while (true){
-            val randomHeartRate = (101..140).random()
+    private suspend fun simulateData() {
+        var steps = 100.0
+
+        while (true) {
+            val stepIncrement = (2..22).random()
+            steps += stepIncrement
+
+            val randomHeartRate = (85..98).random()
+            val randomTemp = (34..37).random()
+
             viewModelScope.launch {
                 sensorDataUseCases.addSensorData(
-                    sensorData = SensorData(
+                    SensorData(
                         sensorType = SensorType.HEART_RATE,
                         value = randomHeartRate.toDouble(),
-
-
-                        )
-                )
-                sensorDataUseCases.addSensorData(
-                    sensorData = SensorData(
-                        sensorType = SensorType.TEMPERATURE,
-                        value = (38..49).random().toDouble(),
                     )
                 )
+
                 sensorDataUseCases.addSensorData(
-                    sensorData = SensorData(
+                    SensorData(
+                        sensorType = SensorType.TEMPERATURE,
+                        value = randomTemp.toDouble(),
+                    )
+                )
+
+                sensorDataUseCases.addSensorData(
+                    SensorData(
                         sensorType = SensorType.STEP_COUNT,
-                        value = (0..1).random().toDouble(),
+                        value = steps
                     )
                 )
             }
-            delay(10_000L)
+
+            delay(5_000L)  //5s
         }
     }
-    //region Data Transfer
+
     sealed class TransferUiState {
         object Idle : TransferUiState()
         data class Transferring(val progress: Int) : TransferUiState()
@@ -195,7 +210,6 @@ class HomeViewModel @Inject constructor(
                 location.addOnSuccessListener {
                     it?.let { loc ->
                         _location.postValue(loc)
-                        println("Location: ${loc.latitude}, ${loc.longitude}")
                         viewModelScope.launch {
                             fetchWeather(loc) // <-- pasa la ubicación directamente
                         }
@@ -241,10 +255,21 @@ class HomeViewModel @Inject constructor(
     fun getSensorData(){
         viewModelScope.launch {
             sensorDataUseCases.getSensorDataByType(SensorType.HEART_RATE).collect {
-                println(it)
-                _registers.value = it
+                _hearthRateRegisters.value = it
+            }
+
+        }
+        viewModelScope.launch {
+            sensorDataUseCases.getSensorDataByType(SensorType.TEMPERATURE).collect {
+                _temperatureRegisters.value = it
             }
         }
+        viewModelScope.launch {
+            sensorDataUseCases.getSensorDataByType(SensorType.STEP_COUNT).collect {
+                _stepCountRegisters.value = it
+            }
+        }
+
     }
 
     //endregion

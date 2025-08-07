@@ -68,9 +68,6 @@ class LoginViewModel @Inject constructor(
         _passwordError.value = null
     }
 
-    init {
-        println("LoginViewModel initialized")
-    }
 
     //Region OnEvent
     fun onEvent(event: LoginFormEvent) {
