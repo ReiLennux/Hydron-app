@@ -106,7 +106,7 @@ class OrchestratorDataSyncManager @Inject constructor (
 
             val riskAnalysis = riskAnalyzer.analyzeDehydrationRisk(sensorData, userInfo.age, conditions)
 
-                sendRiskData(userInfo, sensorData, location, riskAnalysis, uid)
+            sendRiskData(userInfo, sensorData, location, riskAnalysis, uid)
 
         } catch (e: Exception) {
             Log.e(TAG, "Error procesando datos de sensores: ${e.message}")

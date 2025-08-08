@@ -27,7 +27,6 @@ class SharedStateViewModel @Inject constructor(
     val isMonitoring: StateFlow<Boolean> = _isMonitoring
 
     init {
-        Log.d("SharedStateViewModel", "Agregando listener a DataClient")
         dataClient.addListener(this)
 
         viewModelScope.launch {
@@ -45,11 +44,11 @@ class SharedStateViewModel @Inject constructor(
                     val dataMap = DataMapItem.fromDataItem(event.dataItem).dataMap
                     val newValue = dataMap.getBoolean(KEY_IS_MONITORING_TOGGLE)
 
-                    Log.d("SharedStateViewModel", "onDataChanged - Recibido: $newValue")
-
                     if (newValue != _isMonitoring.value) {
                         _isMonitoring.value = newValue
-                        // No llamamos toggleTracking para evitar bucle infinito
+                        viewModelScope.launch {
+                            trackingController.toggleTracking(newValue, viewModelScope)
+                        }
                     }
                 }
             }
@@ -59,7 +58,6 @@ class SharedStateViewModel @Inject constructor(
     fun toggleMonitoring() {
         viewModelScope.launch {
             val newValue = !_isMonitoring.value
-            Log.d("SharedStateViewModel", "toggleMonitoring() -> $newValue")
             trackingController.toggleTracking(newValue, viewModelScope)
         }
     }

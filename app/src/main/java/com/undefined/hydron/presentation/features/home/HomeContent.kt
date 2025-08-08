@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.DeviceThermostat
+import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PowerSettingsNew
@@ -88,7 +89,11 @@ import com.undefined.hydron.presentation.shared.viewmodels.SharedStateViewModel
 import ir.ehsannarmani.compose_charts.LineChart
 import ir.ehsannarmani.compose_charts.models.AnimationMode
 import ir.ehsannarmani.compose_charts.models.DrawStyle
+import ir.ehsannarmani.compose_charts.models.GridProperties
+import ir.ehsannarmani.compose_charts.models.LabelHelperProperties
+import ir.ehsannarmani.compose_charts.models.LabelProperties
 import ir.ehsannarmani.compose_charts.models.Line
+import ir.ehsannarmani.compose_charts.models.ZeroLineProperties
 
 @Composable
 fun HomeContent(
@@ -324,170 +329,155 @@ fun SystemControlCard(
 fun SensorStatusCard(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
-    val hearthRegisters by viewModel.hearthRateRegisters.observeAsState(emptyList())
-    val bpmList = hearthRegisters.map { it.value }
-
+    val heartRateRegisters by viewModel.hearthRateRegisters.observeAsState(emptyList())
     val temperatureRegisters by viewModel.temperatureRegisters.observeAsState(emptyList())
-    val temperatureList = temperatureRegisters.map { it.value }
-
     val stepCountRegisters by viewModel.stepCountRegisters.observeAsState(emptyList())
+
+    val bpmList = heartRateRegisters.map { it.value }
+    val temperatureList = temperatureRegisters.map { it.value }
     val stepCountList = stepCountRegisters.map { it.value }
 
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(20.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Sensors,
-                        contentDescription = "Sensores",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = "Sensores Biométricos",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
+        Column(modifier = Modifier.padding(16.dp)) {
 
-                if (bpmList.isNotEmpty()) {
-                    Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        )
-                    ) {
-                        Text(
-                            text = "${bpmList.last().toInt()} BPM",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                        )
-                    }
-                }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(bottom = 10.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Sensors,
+                    contentDescription = "Sensores",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Sensores Biometricos",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            if (bpmList.isNotEmpty() && temperatureList.isNotEmpty() && stepCountList.isNotEmpty()) {
+            if (bpmList.isNotEmpty()) {
                 GenericChart(
                     registerList = bpmList,
                     label = "BPM"
                 )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Rango normal: 60-100 BPM",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    if (bpmList.last() > 100 || bpmList.last() < 60) {
-                        Card(
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.errorContainer,
-                                contentColor = MaterialTheme.colorScheme.onErrorContainer
-                            )
-                        ) {
-                            Text(
-                                text = if (bpmList.last() > 100) "Elevado" else "Bajo",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Medium,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
-                        }
-                    }
-                }
                 Spacer(modifier = Modifier.height(12.dp))
-                GenericChart(
-                    registerList = temperatureList,
-                    label = "Temperatura"
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Rango normal: 60-100 BPM",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    if (bpmList.last() > 100 || bpmList.last() < 60) {
-                        Card(
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.errorContainer,
-                                contentColor = MaterialTheme.colorScheme.onErrorContainer
-                            )
-                        ) {
-                            Text(
-                                text = if (bpmList.last() > 100) "Elevado" else "Bajo",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Medium,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-                GenericChart(
-                    registerList = stepCountList,
-                    label = "Pasos"
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Rango normal: 60-100 BPM",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    if (bpmList.last() > 100 || bpmList.last() < 60) {
-                        Card(
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.errorContainer,
-                                contentColor = MaterialTheme.colorScheme.onErrorContainer
-                            )
-                        ) {
-                            Text(
-                                text = if (bpmList.last() > 100) "Elevado" else "Bajo",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Medium,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-
             } else {
-                NoSensorDataMessage()
+                Text("No hay datos de BPM", modifier = Modifier.padding(8.dp))
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp) // espacio horizontal entre cards
+            ) {
+                if (temperatureList.size >= 2) {
+                    val last = temperatureList.last()
+                    val prev = temperatureList[temperatureList.lastIndex - 1]
+                    val diff = last - prev
+                    val arrow = when {
+                        diff > 0f -> "↑"
+                        diff < 0f -> "↓"
+                        else -> ""
+                    }
+                    val diffText = if (diff.toFloat() != 0f) "$arrow ${"%.1f".format(kotlin.math.abs(diff))}°C" else null
+                    val diffColor = if (diff > 0f) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+
+                    SensorSimpleCard(
+                        modifier = Modifier.weight(1f), // para que tome la mitad del ancho
+                        icon = Icons.Default.DeviceThermostat,
+                        label = "Temperatura",
+                        value = "%.1f °C".format(last),
+                        changeText = diffText,
+                        changeColor = diffColor
+                    )
+                }
+
+                if (stepCountList.size >= 2) {
+                    val last = stepCountList.last()
+                    val prev = stepCountList[stepCountList.lastIndex - 1]
+                    val diff = last - prev
+                    val arrow = when {
+                        diff > 0 -> "↑"
+                        diff < 0 -> "↓"
+                        else -> ""
+                    }
+                    val diffText = if (diff.toInt() != 0) "$arrow ${kotlin.math.abs(diff)} pasos" else null
+                    val diffColor = if (diff > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+
+                    SensorSimpleCard(
+                        modifier = Modifier.weight(1f), // para que tome la mitad del ancho
+                        icon = Icons.Filled.DirectionsWalk,
+                        label = "Pasos",
+                        value = last.toString(),
+                        changeText = diffText,
+                        changeColor = diffColor
+                    )
+                }
+            }
+
+        }
+    }
+}
+
+@Composable
+fun SensorSimpleCard(
+    modifier: Modifier = Modifier,
+    icon: ImageVector,
+    label: String,
+    value: String,
+    changeText: String?,
+    changeColor: Color?
+) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = label,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(28.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = value,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+
+            if (changeText != null && changeColor != null) {
+                Text(
+                    text = changeText,
+                    color = changeColor,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
         }
     }
 }
+
+
 
 @Composable
 fun GenericChart(
@@ -495,15 +485,32 @@ fun GenericChart(
     label: String
 ) {
     val primary = MaterialTheme.colorScheme.primary
+    val surface = MaterialTheme.colorScheme.surfaceContainer
+    val textColor = MaterialTheme.colorScheme.onSurfaceVariant
+
+    if (registerList.isEmpty()) {
+        Text("No hay datos", color = textColor, modifier = Modifier.padding(16.dp))
+        return
+    }
+
+    val dataMin = registerList.minOrNull() ?: 0.0
+    val dataMax = registerList.maxOrNull() ?: 0.0
+
+    val minValue = if (dataMin - 10.0 > 0) dataMin - 10.0 else 0.0
+    val maxValue = dataMax + 10.0
+
+    // Para no saturar, limitar la cantidad de etiquetas en Y (vertical)
+    val maxYLabels = when {
+        registerList.size <= 5 -> registerList.size
+        registerList.size <= 10 -> 5
+        else -> 3
+    }
 
     LineChart(
         modifier = Modifier
             .fillMaxWidth()
-            .height(120.dp)
-            .background(
-                MaterialTheme.colorScheme.surfaceContainer,
-                RoundedCornerShape(12.dp)
-            )
+            .height(140.dp)
+            .background(surface, RoundedCornerShape(12.dp))
             .padding(12.dp),
         data = listOf(
             Line(
@@ -517,8 +524,34 @@ fun GenericChart(
             )
         ),
         animationMode = AnimationMode.Together(delayBuilder = { 0 }),
+        maxValue = maxValue,
+        minValue = minValue,
+        labelHelperProperties = LabelHelperProperties(
+            enabled = true,
+            textStyle = MaterialTheme.typography.bodySmall.copy(color = textColor)
+        ),
+        labelProperties = LabelProperties(
+            enabled = true,
+            textStyle = MaterialTheme.typography.bodySmall.copy(color = textColor),
+            padding = 8.dp
+        ),
+        gridProperties = GridProperties(
+            enabled = true,
+            yAxisProperties = GridProperties.AxisProperties(
+                enabled = true,
+                color = SolidColor(textColor.copy(alpha = 0.1f)),  // Usar SolidColor
+                lineCount = maxYLabels
+            )
+        ),
+
+                zeroLineProperties = ZeroLineProperties(
+            enabled = true,
+            color = SolidColor(primary.copy(alpha = 0.15f)), // Aquí envuelves con SolidColor
+            thickness = 1.dp
+        )
     )
 }
+
 
 
 //endregion

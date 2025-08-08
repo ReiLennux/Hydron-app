@@ -116,6 +116,8 @@ object AppModule {
             loginUser = com.undefined.hydron.domain.useCases.auth.LoginUser(repository)
         )
 
+
+
     @Provides
     fun provideHandleWearMessage(dao: IWearMessageDao): HandleWearMessage = HandleWearMessage(dao)
 
@@ -145,6 +147,8 @@ object AppModule {
     fun provideDataTransferService(
         sensorDataUseCases: SensorDataUseCases,
         firebaseDatabase: FirebaseDatabase,
+        dataStoreUseCases: DataStoreUseCases,
+        authUseCases: AuthUseCases,
         firebaseAuth: FirebaseAuth
     ): DataTransferService {
         return DataTransferService(

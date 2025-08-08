@@ -187,7 +187,6 @@ class ApiForegroundService : Service(), DataClient.OnDataChangedListener {
         try {
             val nodeId = getWearNodeId() ?: return
             messageClient.sendMessage(nodeId, "/stop_tracking", null).await()
-            Log.d("ApiForegroundService", "Mensaje stop_tracking enviado al wearable")
         } catch (e: Exception) {
             Log.e("ApiForegroundService", "Error enviando stop_tracking: ${e.message}")
         }

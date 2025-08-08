@@ -74,9 +74,9 @@ class HomeViewModel @Inject constructor(
         fetchLocationOnce()
         getSensorData()
         getTotalRecords()
-        viewModelScope.launch {
-            simulateData()
-        }
+//        viewModelScope.launch {
+//            simulateData()
+//        }
     }
 
     private suspend fun simulateData() {

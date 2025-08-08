@@ -95,7 +95,8 @@ class DataTransferService @Inject constructor(
         val updatesMap = batch.associate { entity ->
             "sensor_data/$userId/${entity.id}" to entity.toFirebaseMap()
         }
-        firebaseDatabase.reference.updateChildren(updatesMap).await()
+        firebaseDatabase/*.getReference("sensor_data")
+        .removeValue()*/.reference.updateChildren(updatesMap).await()
     }
 
     private suspend fun markBatchAsUploaded(batch: List<SensorData>) {

@@ -25,10 +25,10 @@ class BootWorker(appContext: Context, workerParams: WorkerParameters) :
 //        )
 //        setForegroundAsync(foregroundInfo)
 
-        repeat(5) {
-            Log.d("BootWorker", "Enviando datos desde Worker...")
-            delay(10_000L)
-        }
+        //repeat(5) {
+        //    Log.d("BootWorker", "Enviando datos desde Worker...")
+        //    delay(10_000L)
+        //}
 
         return Result.success()
     }

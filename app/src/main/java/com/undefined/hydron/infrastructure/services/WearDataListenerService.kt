@@ -27,26 +27,42 @@ class WearDataListenerService : WearableListenerService() {
 
     override fun onMessageReceived(messageEvent: MessageEvent) {
         Log.d("DATA_RECIVED", "Mensaje recibido: $messageEvent")
+
         if (messageEvent.path == "/sensor_data") {
             val payload = String(messageEvent.data, Charsets.UTF_8)
-            Log.d("DATA_RECIVED", "Mensaje recibido: $payload")
+            Log.d("DATA_RECIVED", "Payload recibido: $payload")
 
-            val value = payload.toDoubleOrNull()
-            if (value != null) {
-                val data = SensorData(
-                    sensorType = SensorType.HEART_RATE, 
-                    value = value,
-                    takenAt = System.currentTimeMillis()
-                )
+            val parts = payload.split(":")
+            if (parts.size == 2) {
+                val typeString = parts[0]
+                val value = parts[1].toDoubleOrNull()
 
-                CoroutineScope(Dispatchers.IO).launch {
-                    sensorDataUseCases.addSensorData(data)
+                val sensorType = try {
+                    SensorType.valueOf(typeString)
+                } catch (e: Exception) {
+                    Log.e("WearService", "Tipo de sensor inválido: $typeString")
+                    null
+                }
+
+                if (sensorType != null && value != null) {
+                    val data = SensorData(
+                        sensorType = sensorType,
+                        value = value,
+                        takenAt = System.currentTimeMillis()
+                    )
+
+                    CoroutineScope(Dispatchers.IO).launch {
+                        sensorDataUseCases.addSensorData(data)
+                    }
+                } else {
+                    Log.e("WearService", "Datos inválidos: tipo=$typeString, valor=${parts[1]}")
                 }
             } else {
-                Log.e("WearService", "Payload inválido: $payload")
+                Log.e("WearService", "Payload malformado: $payload")
             }
         } else {
             Log.d("WearService", "Ruta no reconocida: ${messageEvent.path}")
         }
     }
+
 }
